@@ -1,0 +1,2640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST Mobile POS — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --pri: #6c63ff;
+  --pri2: #a89bff;
+  --sec: #f50057;
+  --bg: #07071a;
+  --card: #0f0f28;
+  --card2: #181834;
+  --border: #252545;
+  --text: #e8e8ff;
+  --muted: #6868a0;
+  --success: #00e676;
+  --warning: #ffab00;
+  --danger: #ff1744;
+  --info: #00b0ff;
+  --glow: rgba(108,99,255,0.35);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Animated mesh background ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(108,99,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 80%, rgba(245,0,87,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(0,176,255,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Login Screen ── */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  flex-direction: column;
+  gap: 0;
+}
+
+.login-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 48px 44px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(108,99,255,0.1);
+  animation: loginPop 0.5s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
+  overflow: hidden;
+}
+.login-box::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(108,99,255,0.04) 60deg, transparent 120deg);
+  animation: rotateBg 12s linear infinite;
+}
+@keyframes rotateBg { to { transform: rotate(360deg); } }
+@keyframes loginPop {
+  from { opacity: 0; transform: scale(0.85) translateY(30px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 32px;
+  position: relative;
+}
+.login-logo .icon {
+  font-size: 52px;
+  display: block;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 20px rgba(108,99,255,0.5));
+  animation: floatIcon 3s ease-in-out infinite;
+}
+@keyframes floatIcon {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.login-logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.login-logo p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.login-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  display: block;
+  position: relative;
+}
+
+.login-input-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+.login-input-wrap input {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px 14px 44px;
+  font-size: 15px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  transition: 0.25s;
+  letter-spacing: 4px;
+}
+.login-input-wrap input:focus {
+  outline: none;
+  border-color: var(--pri);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+}
+.login-input-wrap .ico {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  opacity: 0.5;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--pri);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: 0.5px;
+  transition: 0.25s;
+  box-shadow: 0 8px 25px rgba(108,99,255,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(108,99,255,0.55); }
+.login-btn:active { transform: scale(0.97); }
+
+.login-error {
+  color: var(--danger);
+  font-size: 12px;
+  text-align: center;
+  margin-top: 12px;
+  min-height: 18px;
+  animation: shake 0.4s ease;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ── Main App ── */
+#app {
+  display: none;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+#app.visible { display: flex; }
+
+/* ── Sidebar ── */
+.aside {
+  width: 240px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  z-index: 100;
+  box-shadow: 4px 0 40px rgba(108,99,255,0.12);
+  animation: asideIn 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes asideIn {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.aside-logo {
+  padding: 22px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(245,0,87,0.07));
+}
+.aside-logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--pri);
+  letter-spacing: -0.3px;
+}
+.aside-logo p { font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+.aside-badge {
+  display: inline-block;
+  background: rgba(255,23,68,0.15);
+  color: var(--danger);
+  border: 1px solid rgba(255,23,68,0.3);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-top: 6px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.aside-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+.aside-nav::-webkit-scrollbar { width: 4px; }
+.aside-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.nav-group-label {
+  font-size: 9px;
+  color: var(--muted);
+  padding: 10px 20px 4px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  border-left: 2px solid transparent;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.nav-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at left center, rgba(108,99,255,0.15) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.nav-item:hover { background: rgba(108,99,255,0.08); color: var(--text); }
+.nav-item:hover::after { opacity: 1; }
+.nav-item.active { background: rgba(108,99,255,0.14); color: var(--pri); border-left-color: var(--pri); font-weight: 600; }
+.nav-item .nic { font-size: 17px; width: 22px; text-align: center; flex-shrink: 0; }
+.nav-item .ntxt { flex: 1; }
+
+.aside-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+.logout-btn {
+  width: 100%;
+  padding: 9px;
+  background: rgba(255,23,68,0.1);
+  color: var(--danger);
+  border: 1px solid rgba(255,23,68,0.25);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.logout-btn:hover { background: rgba(255,23,68,0.2); }
+
+/* ── Main Content ── */
+.main {
+  margin-left: 240px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  padding: 14px 28px;
+  background: rgba(15,15,40,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.admin-chip {
+  background: rgba(255,23,68,0.12);
+  color: var(--danger);
+  border: 1px solid rgba(255,23,68,0.25);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.back-btn {
+  background: rgba(108,99,255,0.12);
+  color: var(--pri);
+  border: 1px solid rgba(108,99,255,0.25);
+  padding: 7px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.back-btn:hover { background: rgba(108,99,255,0.22); }
+
+.content { padding: 28px; flex: 1; }
+
+/* ── Panels ── */
+.panel { display: none; animation: panelIn 0.3s cubic-bezier(0.16,1,0.3,1); }
+.panel.active { display: block; }
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Cards ── */
+.acard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+.acard-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--pri);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.full { grid-column: 1/-1; }
+
+/* ── Form Fields ── */
+.fg { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+input[type=text], input[type=password], input[type=email], input[type=tel], input[type=number], select, textarea {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  transition: 0.2s;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--pri);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+}
+select option { background: var(--card2); }
+textarea { resize: vertical; min-height: 80px; }
+
+/* ── Buttons ── */
+.btn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: scale(0.97); }
+.bpri { background: var(--pri); color: #fff; box-shadow: 0 4px 15px rgba(108,99,255,0.3); }
+.bpri:hover { box-shadow: 0 8px 25px rgba(108,99,255,0.5); }
+.bdanger { background: rgba(255,23,68,0.15); color: var(--danger); border: 1px solid rgba(255,23,68,0.3); }
+.bdanger:hover { background: rgba(255,23,68,0.25); }
+.bsuccess { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.25); }
+.bsuccess:hover { background: rgba(0,230,118,0.22); }
+.bwarn { background: rgba(255,171,0,0.12); color: var(--warning); border: 1px solid rgba(255,171,0,0.25); }
+.bwarn:hover { background: rgba(255,171,0,0.22); }
+.bsm { padding: 6px 12px; font-size: 11px; }
+
+/* ── Toggle Switch ── */
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: 0.2s;
+}
+.toggle-wrap:hover { border-color: var(--pri); }
+.toggle-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.toggle-info p { font-size: 11px; color: var(--muted); }
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle input { display: none; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.toggle input:checked + .toggle-slider { background: var(--pri); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* ── Color Picker ── */
+.color-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.cswatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: 0.2s;
+}
+.cswatch:hover { transform: scale(1.15); }
+.cswatch.active { border-color: #fff; box-shadow: 0 0 0 2px var(--pri); transform: scale(1.15); }
+
+/* ── Sidebar Items Toggles ── */
+.sidebar-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  cursor: grab;
+  transition: 0.2s;
+}
+.sidebar-item-row:hover { border-color: var(--pri); background: rgba(108,99,255,0.06); }
+.sidebar-item-row.dragging { opacity: 0.4; border-style: dashed; }
+.drag-handle { color: var(--muted); font-size: 16px; cursor: grab; margin-right: 8px; }
+.sitem-info { display: flex; align-items: center; gap: 8px; flex: 1; }
+.sitem-ic { font-size: 17px; }
+.sitem-name { font-size: 13px; font-weight: 600; }
+.sitem-cat { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+/* ── Stats Cards ── */
+.stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(108,99,255,0.2); }
+.stat-card::before { content: ''; position: absolute; top: -10px; right: -10px; width: 60px; height: 60px; border-radius: 50%; opacity: 0.15; }
+.s1::before { background: var(--pri); }
+.s2::before { background: var(--success); }
+.s3::before { background: var(--warning); }
+.s4::before { background: var(--danger); }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 900; margin: 8px 0 4px; }
+.stat-label { font-size: 11px; color: var(--muted); }
+.stat-ic { font-size: 22px; }
+
+/* ── Table ── */
+.tbl-wrap { overflow: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 14px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; text-align: left; background: var(--card2); }
+td { padding: 11px 14px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: rgba(108,99,255,0.04); }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+.bs { background: rgba(0,230,118,0.15); color: var(--success); }
+.bw { background: rgba(255,171,0,0.15); color: var(--warning); }
+.bd { background: rgba(255,23,68,0.15); color: var(--danger); }
+.bi { background: rgba(0,176,255,0.15); color: var(--info); }
+.bp { background: rgba(108,99,255,0.15); color: var(--pri); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--success);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 13px;
+  z-index: 9999;
+  display: none;
+  animation: toastIn 0.3s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  max-width: 300px;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* ── PIN Screen for POS link ── */
+.pin-display {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: 0.2s;
+}
+.pin-dot.filled { background: var(--pri); box-shadow: 0 0 8px var(--pri); }
+.pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; max-width: 240px; margin: 0 auto; }
+.pin-key {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pin-key:hover { border-color: var(--pri); background: rgba(108,99,255,0.15); }
+.pin-key:active { transform: scale(0.92); }
+
+/* ── Font Size Preview ── */
+.fs-preview { padding: 10px 14px; background: var(--card2); border-radius: 8px; margin-top: 8px; border: 1px solid var(--border); }
+
+/* ── Section divider ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .aside { transform: translateX(-100%); transition: 0.3s; }
+  .aside.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .stat-row { grid-template-columns: 1fr 1fr; }
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .content { padding: 16px; }
+}
+
+.mob-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
+}
+@media (max-width: 768px) { .mob-toggle-btn { display: block; } }
+
+/* Glow line on active card */
+.acard-glow { box-shadow: 0 0 0 1px rgba(108,99,255,0.2), 0 8px 30px rgba(108,99,255,0.08); }
+
+/* Role specific visibility */
+.admin-only { /* always shown in admin panel */ }
+
+/* Info chip */
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,176,255,0.1);
+  color: var(--info);
+  border: 1px solid rgba(0,176,255,0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🛡️</span>
+      <h1>Admin Panel</h1>
+      <p>ST Mobile & Designing POS</p>
+    </div>
+    <label class="login-label">🔐 Admin Password</label>
+    <div class="login-input-wrap">
+      <span class="ico">🔑</span>
+      <input type="password" id="admin-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🚀 Access Admin Panel</button>
+    <div class="login-error" id="login-err"></div>
+    <div style="text-align:center;margin-top:18px;font-size:11px;color:var(--muted)">
+      Default password: <span style="font-family:'JetBrains Mono';color:var(--pri);letter-spacing:2px">admin1234</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN APP ═══════════ -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <div class="aside" id="aside">
+    <div class="aside-logo">
+      <h1>📱 ST Mobile POS</h1>
+      <p>Admin Control Panel</p>
+      <div class="aside-badge">🔴 Admin Only</div>
+    </div>
+    <div class="aside-nav">
+      <div class="nav-group-label">Overview</div>
+      <div class="nav-item active" data-panel="overview" onclick="goPanel('overview',this)">
+        <span class="nic">📊</span><span class="ntxt">Dashboard</span>
+      </div>
+
+      <div class="nav-group-label">Shop Config</div>
+      <div class="nav-item" data-panel="shopinfo" onclick="goPanel('shopinfo',this)">
+        <span class="nic">🏪</span><span class="ntxt">Shop Information</span>
+      </div>
+      <div class="nav-item" data-panel="appearance" onclick="goPanel('appearance',this)">
+        <span class="nic">🎨</span><span class="ntxt">Appearance & Theme</span>
+      </div>
+      <div class="nav-item" data-panel="sidebar-config" onclick="goPanel('sidebar-config',this)">
+        <span class="nic">☰</span><span class="ntxt">Sidebar Manager</span>
+      </div>
+
+      <div class="nav-group-label">Access & Security</div>
+      <div class="nav-item" data-panel="users" onclick="goPanel('users',this)">
+        <span class="nic">👤</span><span class="ntxt">Users & Roles</span>
+      </div>
+      <div class="nav-item" data-panel="pinlock" onclick="goPanel('pinlock',this)">
+        <span class="nic">🔐</span><span class="ntxt">PIN & Password</span>
+      </div>
+
+      <div class="nav-group-label">POS Features</div>
+      <div class="nav-item" data-panel="features" onclick="goPanel('features',this)">
+        <span class="nic">⚙️</span><span class="ntxt">Feature Toggles</span>
+      </div>
+      <div class="nav-item" data-panel="pos-settings" onclick="goPanel('pos-settings',this)">
+        <span class="nic">🛒</span><span class="ntxt">POS Settings</span>
+      </div>
+      <div class="nav-item" data-panel="invoice" onclick="goPanel('invoice',this)">
+        <span class="nic">🧾</span><span class="ntxt">Invoice & Receipt</span>
+      </div>
+
+      <div class="nav-group-label">Data</div>
+      <div class="nav-item" data-panel="data" onclick="goPanel('data',this)">
+        <span class="nic">💾</span><span class="ntxt">Backup & Restore</span>
+      </div>
+      <div class="nav-item" data-panel="danger" onclick="goPanel('danger',this)">
+        <span class="nic">⚠️</span><span class="ntxt">Danger Zone</span>
+      </div>
+
+      <div class="nav-group-label">Advanced Admin</div>
+      <div class="nav-item" data-panel="adv-analytics" onclick="goPanel('adv-analytics',this)">
+        <span class="nic">🔮</span><span class="ntxt">Business Analytics</span>
+      </div>
+      <div class="nav-item" data-panel="adv-staff" onclick="goPanel('adv-staff',this)">
+        <span class="nic">👷</span><span class="ntxt">Staff Manager</span>
+      </div>
+      <div class="nav-item" data-panel="adv-tax" onclick="goPanel('adv-tax',this)">
+        <span class="nic">🧾</span><span class="ntxt">Tax & GST Config</span>
+      </div>
+      <div class="nav-item" data-panel="adv-commission" onclick="goPanel('adv-commission',this)">
+        <span class="nic">💰</span><span class="ntxt">Commission Rules</span>
+      </div>
+      <div class="nav-item" data-panel="adv-notifications" onclick="goPanel('adv-notifications',this)">
+        <span class="nic">🔔</span><span class="ntxt">Notification Rules</span>
+      </div>
+
+      <div class="nav-group-label">Business Tools</div>
+      <div class="nav-item" data-panel="adv-inventory" onclick="goPanel('adv-inventory',this)">
+        <span class="nic">📦</span><span class="ntxt">Inventory Overview</span>
+      </div>
+      <div class="nav-item" data-panel="adv-crm" onclick="goPanel('adv-crm',this)">
+        <span class="nic">👥</span><span class="ntxt">CRM Dashboard</span>
+      </div>
+      <div class="nav-item" data-panel="adv-repair-mgmt" onclick="goPanel('adv-repair-mgmt',this)">
+        <span class="nic">🔧</span><span class="ntxt">Repair Management</span>
+      </div>
+      <div class="nav-item" data-panel="adv-sales-intel" onclick="goPanel('adv-sales-intel',this)">
+        <span class="nic">📊</span><span class="ntxt">Sales Intelligence</span>
+      </div>
+      <div class="nav-item" data-panel="adv-branding" onclick="goPanel('adv-branding',this)">
+        <span class="nic">🎨</span><span class="ntxt">Branding & Design</span>
+      </div>
+      <div class="nav-item" data-panel="adv-operations" onclick="goPanel('adv-operations',this)">
+        <span class="nic">⚙️</span><span class="ntxt">Operations</span>
+      </div>
+    </div>
+    <div class="aside-footer">
+      <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="mob-toggle-btn" onclick="document.getElementById('aside').classList.toggle('open')">☰</button>
+        <h2 id="panel-title">📊 Dashboard</h2>
+      </div>
+      <div class="topbar-right">
+        <div class="admin-chip">🛡️ ADMIN</div>
+        <button class="back-btn" onclick="window.location='index.html'">← Back to POS</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ PANEL: OVERVIEW ══ -->
+      <div class="panel active" id="panel-overview">
+        <div class="info-chip">ℹ️ Changes here reflect immediately in the POS system (shared localStorage)</div>
+
+        <div class="stat-row" id="overview-stats">
+          <div class="stat-card s1">
+            <div class="stat-ic">📦</div>
+            <div class="stat-val" id="ov-products">—</div>
+            <div class="stat-label">Total Products</div>
+          </div>
+          <div class="stat-card s2">
+            <div class="stat-ic">🧾</div>
+            <div class="stat-val" id="ov-invoices">—</div>
+            <div class="stat-label">Total Invoices</div>
+          </div>
+          <div class="stat-card s3">
+            <div class="stat-ic">👥</div>
+            <div class="stat-val" id="ov-customers">—</div>
+            <div class="stat-label">Customers</div>
+          </div>
+          <div class="stat-card s4">
+            <div class="stat-ic">🔧</div>
+            <div class="stat-val" id="ov-repairs">—</div>
+            <div class="stat-label">Repairs</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="acard acard-glow">
+            <div class="acard-title">🏪 Current Shop Info</div>
+            <div id="ov-shopinfo" style="font-size:13px;line-height:2;color:var(--muted)">Loading...</div>
+          </div>
+          <div class="acard acard-glow">
+            <div class="acard-title">⚙️ Active Settings</div>
+            <div id="ov-settings" style="font-size:13px;line-height:2;color:var(--muted)">Loading...</div>
+          </div>
+        </div>
+
+        <div class="acard">
+          <div class="acard-title">🔴 Low Stock Alert</div>
+          <div class="tbl-wrap">
+            <table id="ov-lowstock">
+              <thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Min</th><th>Status</th></tr></thead>
+              <tbody id="ov-lowstock-body"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: SHOP INFO ══ -->
+      <div class="panel" id="panel-shopinfo">
+        <div class="acard">
+          <div class="acard-title">🏪 Shop Information</div>
+          <div class="grid2">
+            <div class="fg"><label>Shop Name</label><input type="text" id="s-shopName" placeholder="ST Mobile & Designing"></div>
+            <div class="fg"><label>Phone Number</label><input type="tel" id="s-phone" placeholder="+94 77 xxx xxxx"></div>
+            <div class="fg"><label>Email</label><input type="email" id="s-email" placeholder="shop@email.com"></div>
+            <div class="fg"><label>WhatsApp</label><input type="tel" id="s-whatsapp" placeholder="+94 77 xxx xxxx"></div>
+            <div class="fg full"><label>Address</label><textarea id="s-address" rows="2" placeholder="Shop address..."></textarea></div>
+            <div class="fg"><label>Facebook / Website</label><input type="text" id="s-fb" placeholder="facebook.com/yourpage"></div>
+            <div class="fg"><label>Invoice Prefix</label><input type="text" id="s-prefix" placeholder="INV" style="font-family:'JetBrains Mono',monospace"></div>
+            <div class="fg full"><label>Invoice Footer Note</label><textarea id="s-note" rows="2" placeholder="Thank you for choosing us!"></textarea></div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">🏦 Bank Details (for invoices)</div>
+          <div class="grid2">
+            <div class="fg"><label>Bank Name</label><input type="text" id="s-bank" placeholder="Bank of Ceylon"></div>
+            <div class="fg"><label>Account Number</label><input type="text" id="s-accNo" placeholder="xxxx xxxx xxxx" style="font-family:'JetBrains Mono',monospace"></div>
+            <div class="fg"><label>Account Name</label><input type="text" id="s-accName" placeholder="Account holder name"></div>
+            <div class="fg"><label>Branch</label><input type="text" id="s-branch" placeholder="Main Branch"></div>
+          </div>
+        </div>
+        <button class="btn bpri" onclick="saveShopInfo()">💾 Save Shop Information</button>
+      </div>
+
+      <!-- ══ PANEL: APPEARANCE ══ -->
+      <div class="panel" id="panel-appearance">
+        <div class="acard">
+          <div class="acard-title">🎨 Color Theme</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Select the primary color theme for the POS system.</p>
+          <div class="color-grid" id="theme-swatches">
+            <div class="cswatch" style="background:#6c63ff" data-theme="" title="Default Purple" onclick="selectTheme('',this)"></div>
+            <div class="cswatch" style="background:#00b4d8" data-theme="ocean" title="Ocean Blue" onclick="selectTheme('ocean',this)"></div>
+            <div class="cswatch" style="background:#52b788" data-theme="forest" title="Forest Green" onclick="selectTheme('forest',this)"></div>
+            <div class="cswatch" style="background:#e63946" data-theme="rose" title="Rose Red" onclick="selectTheme('rose',this)"></div>
+            <div class="cswatch" style="background:#e17055" data-theme="sunset" title="Sunset Orange" onclick="selectTheme('sunset',this)"></div>
+            <div class="cswatch" style="background:#fd79a8" data-theme="pink" title="Pink" onclick="selectTheme('pink',this)"></div>
+            <div class="cswatch" style="background:#a29bfe" data-theme="lavender" title="Lavender" onclick="selectTheme('lavender',this)"></div>
+            <div class="cswatch" style="background:#fdcb6e" data-theme="gold" title="Gold" onclick="selectTheme('gold',this)"></div>
+          </div>
+          <div style="margin-top:14px">
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">CUSTOM COLOR</label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <input type="color" id="custom-color" value="#6c63ff" style="width:44px;height:38px;padding:2px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--card2)">
+              <button class="btn bpri bsm" onclick="applyCustomColor()">Apply Custom Color</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="acard">
+          <div class="acard-title">🌗 Display Mode</div>
+          <div class="grid2">
+            <div class="toggle-wrap">
+              <div class="toggle-info">
+                <h4>🌙 Dark Mode</h4>
+                <p>Dark/light theme toggle</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="t-darkmode" onchange="toggleDarkMode(this.checked)">
+                <div class="toggle-slider"></div>
+              </label>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info">
+                <h4>✨ Animated Background</h4>
+                <p>Particle/canvas background</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="t-bganim" onchange="saveSetting('bgAnim',this.checked)">
+                <div class="toggle-slider"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="acard">
+          <div class="acard-title">🔤 Font Size</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="fs-sm" onclick="setFontSize('sm')" style="font-size:11px">Small</button>
+            <button class="btn" id="fs-md" onclick="setFontSize('md')" style="font-size:13px">Medium</button>
+            <button class="btn" id="fs-lg" onclick="setFontSize('lg')" style="font-size:16px">Large</button>
+          </div>
+          <div class="fs-preview" style="margin-top:12px">
+            <span id="fs-preview-text" style="color:var(--muted)">Preview: The quick brown fox jumps over the lazy dog</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: SIDEBAR CONFIG ══ -->
+      <div class="panel" id="panel-sidebar-config">
+        <div class="acard">
+          <div class="acard-title">☰ Sidebar Items Manager</div>
+          <div class="info-chip">💡 Toggle visibility of sidebar menu items. Drag to reorder (visual order only).</div>
+          <div id="sidebar-items-list"></div>
+          <div class="action-row">
+            <button class="btn bpri" onclick="saveSidebarConfig()">💾 Save Sidebar Config</button>
+            <button class="btn bwarn" onclick="resetSidebarConfig()">↺ Reset to Default</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: USERS & ROLES ══ -->
+      <div class="panel" id="panel-users">
+        <div class="acard">
+          <div class="acard-title">👤 Current User Mode</div>
+          <div class="grid2">
+            <div>
+              <div class="fg">
+                <label>Active Role</label>
+                <select id="u-role" onchange="saveSetting('role', this.value); updateRoleDisplay()">
+                  <option value="admin">👑 Admin — Full Access</option>
+                  <option value="cashier">🏪 Cashier — Limited Access</option>
+                </select>
+              </div>
+              <div id="role-desc" style="font-size:12px;color:var(--muted);padding:10px;background:var(--card2);border-radius:8px;line-height:1.7"></div>
+            </div>
+            <div>
+              <div style="padding:14px;background:var(--card2);border-radius:12px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Cashier Mode Restrictions</div>
+                <div style="font-size:12px;line-height:2;color:var(--muted)">
+                  ❌ Analytics<br>
+                  ❌ Reports & Exports<br>
+                  ❌ Activity Log<br>
+                  ❌ Settings<br>
+                  ❌ Sales Targets<br>
+                  ❌ Cash Register<br>
+                  ✅ All other features
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">🔐 Cashier PIN</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Set a 4-digit PIN for cashier login. Leave empty to disable cashier lock.</p>
+          <div class="grid2">
+            <div class="fg">
+              <label>Cashier PIN (4 digits)</label>
+              <input type="password" id="u-cashier-pin" maxlength="4" placeholder="e.g. 1234" style="font-family:'JetBrains Mono',monospace;letter-spacing:6px;font-size:18px" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+            <div class="fg">
+              <label>Confirm PIN</label>
+              <input type="password" id="u-cashier-pin2" maxlength="4" placeholder="Confirm PIN" style="font-family:'JetBrains Mono',monospace;letter-spacing:6px;font-size:18px" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+          </div>
+          <button class="btn bpri" onclick="saveCashierPIN()">💾 Save Cashier PIN</button>
+          <button class="btn bdanger bsm" style="margin-left:8px" onclick="clearCashierPIN()">✕ Clear PIN</button>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: PIN & PASSWORD ══ -->
+      <div class="panel" id="panel-pinlock">
+        <div class="acard">
+          <div class="acard-title">🔑 Admin Panel Password</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Change the password used to access this admin panel.</p>
+          <div class="grid2">
+            <div class="fg"><label>Current Password</label><input type="password" id="p-current" placeholder="Current password"></div>
+            <div class="fg"><label>New Password</label><input type="password" id="p-new" placeholder="New password (min 6 chars)"></div>
+            <div class="fg"><label>Confirm New Password</label><input type="password" id="p-confirm" placeholder="Confirm new password"></div>
+          </div>
+          <button class="btn bpri" onclick="changeAdminPass()">🔐 Change Password</button>
+        </div>
+        <div class="acard">
+          <div class="acard-title">🔒 POS Lock Screen PIN</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">4-digit PIN shown on the POS lock screen (startup).</p>
+          <div class="fg" style="max-width:200px">
+            <label>POS Startup PIN</label>
+            <input type="password" id="p-pospin" maxlength="4" placeholder="4 digits" style="font-family:'JetBrains Mono',monospace;letter-spacing:6px;font-size:18px;text-align:center" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          </div>
+          <button class="btn bpri" onclick="savePOSPIN()">💾 Save POS PIN</button>
+          <button class="btn bdanger bsm" style="margin-left:8px" onclick="document.getElementById('p-pospin').value='';saveSetting('pin','');toast('✅ PIN cleared')">✕ Remove PIN</button>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: FEATURE TOGGLES ══ -->
+      <div class="panel" id="panel-features">
+        <div class="acard">
+          <div class="acard-title">🛒 Sales Features</div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>💳 Credit Sales</h4><p>Allow selling on credit</p></div><label class="toggle"><input type="checkbox" id="f-credits" onchange="saveSetting('feat_credits',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>⚡ Split Payment</h4><p>Allow cash + card split</p></div><label class="toggle"><input type="checkbox" id="f-split" onchange="saveSetting('feat_split',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🎫 Coupons & Discounts</h4><p>Enable coupon code system</p></div><label class="toggle"><input type="checkbox" id="f-coupons" onchange="saveSetting('feat_coupons',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>⭐ Loyalty Points</h4><p>Customer rewards system</p></div><label class="toggle"><input type="checkbox" id="f-loyalty" onchange="saveSetting('feat_loyalty',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🎁 Bundle Packages</h4><p>Product bundle/combo deals</p></div><label class="toggle"><input type="checkbox" id="f-bundles" onchange="saveSetting('feat_bundles',this.checked)"><div class="toggle-slider"></div></label></div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">📱 Operations</div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🔧 Repair Module</h4><p>Device repair job tracking</p></div><label class="toggle"><input type="checkbox" id="f-repairs" onchange="saveSetting('feat_repairs',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🌐 Online Orders</h4><p>Digital/online order management</p></div><label class="toggle"><input type="checkbox" id="f-orders" onchange="saveSetting('feat_orders',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>📅 Appointments</h4><p>Customer appointment booking</p></div><label class="toggle"><input type="checkbox" id="f-appointments" onchange="saveSetting('feat_appointments',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>💬 WhatsApp Messaging</h4><p>Send WA messages from POS</p></div><label class="toggle"><input type="checkbox" id="f-whatsapp" onchange="saveSetting('feat_whatsapp',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>📊 Analytics Dashboard</h4><p>Sales charts & analytics</p></div><label class="toggle"><input type="checkbox" id="f-analytics" onchange="saveSetting('feat_analytics',this.checked)"><div class="toggle-slider"></div></label></div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">🖨️ Print & Export</div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🖨️ Print Receipts</h4><p>Enable receipt printing</p></div><label class="toggle"><input type="checkbox" id="f-print" onchange="saveSetting('feat_print',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>📲 QR/Barcode Scanner</h4><p>Camera barcode scanning</p></div><label class="toggle"><input type="checkbox" id="f-scanner" onchange="saveSetting('feat_scanner',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🏷️ Barcode Labels</h4><p>Generate barcode label sheets</p></div><label class="toggle"><input type="checkbox" id="f-barcodes" onchange="saveSetting('feat_barcodes',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>📑 Reports & Exports</h4><p>PDF/CSV export reports</p></div><label class="toggle"><input type="checkbox" id="f-reports" onchange="saveSetting('feat_reports',this.checked)"><div class="toggle-slider"></div></label></div>
+        </div>
+        <button class="btn bpri" onclick="saveAllFeatures()">💾 Save Feature Settings</button>
+      </div>
+
+      <!-- ══ PANEL: POS SETTINGS ══ -->
+      <div class="panel" id="panel-pos-settings">
+        <div class="acard">
+          <div class="acard-title">🛒 POS Behaviour</div>
+          <div class="grid2">
+            <div class="fg">
+              <label>Default Tax (%)</label>
+              <input type="number" id="ps-tax" placeholder="0" min="0" max="100" step="0.5">
+            </div>
+            <div class="fg">
+              <label>Default Discount (%)</label>
+              <input type="number" id="ps-discount" placeholder="0" min="0" max="100" step="0.5">
+            </div>
+            <div class="fg">
+              <label>Currency Symbol</label>
+              <input type="text" id="ps-currency" placeholder="Rs." style="font-family:'JetBrains Mono',monospace">
+            </div>
+            <div class="fg">
+              <label>Low Stock Warning (units)</label>
+              <input type="number" id="ps-lowstock" placeholder="5" min="1">
+            </div>
+            <div class="fg">
+              <label>Invoice Number Start</label>
+              <input type="number" id="ps-invstart" placeholder="1" min="1">
+            </div>
+            <div class="fg">
+              <label>Loyalty Points Ratio</label>
+              <input type="text" id="ps-loyalty-ratio" placeholder="e.g. 1 point per Rs.100">
+            </div>
+          </div>
+          <hr class="divider">
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🔔 Low Stock Notifications</h4><p>Alert when stock below minimum</p></div><label class="toggle"><input type="checkbox" id="ps-stocknotif" onchange="saveSetting('stockNotif',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>💰 Show Profit in Dashboard</h4><p>Display profit margin stats</p></div><label class="toggle"><input type="checkbox" id="ps-showprofit" onchange="saveSetting('showProfit',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🔒 PIN Lock on Startup</h4><p>Require PIN when opening POS</p></div><label class="toggle"><input type="checkbox" id="ps-pinlock" onchange="saveSetting('pinLock',this.checked)"><div class="toggle-slider"></div></label></div>
+          <button class="btn bpri" style="margin-top:16px" onclick="savePOSSettings()">💾 Save POS Settings</button>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: INVOICE ══ -->
+      <div class="panel" id="panel-invoice">
+        <div class="acard">
+          <div class="acard-title">🧾 Invoice Customization</div>
+          <div class="grid2">
+            <div class="fg">
+              <label>Invoice Prefix</label>
+              <input type="text" id="inv-prefix" placeholder="INV" style="font-family:'JetBrains Mono',monospace">
+            </div>
+            <div class="fg">
+              <label>Invoice Number Padding</label>
+              <input type="number" id="inv-padding" placeholder="4 (e.g. INV-0001)" min="1" max="8">
+            </div>
+            <div class="fg full">
+              <label>Invoice Header Note</label>
+              <textarea id="inv-header" placeholder="Header message above invoice..."></textarea>
+            </div>
+            <div class="fg full">
+              <label>Invoice Footer Note</label>
+              <textarea id="inv-footer" placeholder="Thank you for choosing ST Mobile!"></textarea>
+            </div>
+          </div>
+          <hr class="divider">
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🏦 Show Bank Details</h4><p>Print bank info on invoice</p></div><label class="toggle"><input type="checkbox" id="inv-bank" onchange="saveSetting('invBank',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>📱 Show WhatsApp on Invoice</h4><p>Print WA number</p></div><label class="toggle"><input type="checkbox" id="inv-wa" onchange="saveSetting('invWA',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>🌐 Show Facebook/Website</h4><p>Print social link</p></div><label class="toggle"><input type="checkbox" id="inv-fb" onchange="saveSetting('invFB',this.checked)"><div class="toggle-slider"></div></label></div>
+          <div class="toggle-wrap"><div class="toggle-info"><h4>💰 Show Tax Breakdown</h4><p>Display tax on invoice</p></div><label class="toggle"><input type="checkbox" id="inv-tax" onchange="saveSetting('invTax',this.checked)"><div class="toggle-slider"></div></label></div>
+          <button class="btn bpri" style="margin-top:16px" onclick="saveInvoiceSettings()">💾 Save Invoice Settings</button>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: DATA ══ -->
+      <div class="panel" id="panel-data">
+        <div class="acard">
+          <div class="acard-title">📤 Export Data</div>
+          <div class="grid2">
+            <div style="padding:16px;background:var(--card2);border-radius:12px;border:1px solid var(--border)">
+              <div style="font-size:22px;margin-bottom:8px">📄</div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px">JSON Backup</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Full database export as JSON file</div>
+              <button class="btn bpri bsm" onclick="exportJSON()">⬇️ Download JSON</button>
+            </div>
+            <div style="padding:16px;background:var(--card2);border-radius:12px;border:1px solid var(--border)">
+              <div style="font-size:22px;margin-bottom:8px">📊</div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px">CSV Export</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Export products/invoices as CSV</div>
+              <button class="btn bsuccess bsm" onclick="exportCSV()">⬇️ Export CSV</button>
+            </div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">📥 Import / Restore</div>
+          <div class="info-chip">⚠️ Import will REPLACE current data. Backup first!</div>
+          <div class="fg">
+            <label>Select JSON Backup File</label>
+            <input type="file" id="import-file" accept=".json" style="padding:8px;cursor:pointer">
+          </div>
+          <button class="btn bwarn" onclick="importJSON()">📥 Restore from JSON</button>
+        </div>
+        <div class="acard">
+          <div class="acard-title">📈 Database Summary</div>
+          <div id="db-summary" style="font-size:13px;line-height:2.2;color:var(--muted)">Loading...</div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: DANGER ZONE ══ -->
+      <div class="panel" id="panel-danger">
+        <div class="acard" style="border-color:rgba(255,23,68,0.3)">
+          <div class="acard-title" style="color:var(--danger)">⚠️ Danger Zone</div>
+          <div class="info-chip" style="background:rgba(255,23,68,0.1);color:var(--danger);border-color:rgba(255,23,68,0.2)">
+            ⚠️ These actions are irreversible! Backup your data first.
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="padding:16px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:13px;font-weight:700;margin-bottom:3px">🗑️ Clear All Invoices</div>
+                <div style="font-size:11px;color:var(--muted)">Permanently delete all invoice records</div>
+              </div>
+              <button class="btn bdanger" onclick="dangerClear('invoices','invoices')">Clear Invoices</button>
+            </div>
+
+            <div style="padding:16px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:13px;font-weight:700;margin-bottom:3px">🗑️ Clear All Repairs</div>
+                <div style="font-size:11px;color:var(--muted)">Permanently delete all repair records</div>
+              </div>
+              <button class="btn bdanger" onclick="dangerClear('repairs','repairs')">Clear Repairs</button>
+            </div>
+
+            <div style="padding:16px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:13px;font-weight:700;margin-bottom:3px">🗑️ Clear All Customers</div>
+                <div style="font-size:11px;color:var(--muted)">Permanently delete all customer records</div>
+              </div>
+              <button class="btn bdanger" onclick="dangerClear('customers','customers')">Clear Customers</button>
+            </div>
+
+            <div style="padding:16px;background:rgba(255,23,68,0.05);border:1px solid rgba(255,23,68,0.2);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:13px;font-weight:700;margin-bottom:3px">🗑️ Clear All Products</div>
+                <div style="font-size:11px;color:var(--muted)">⚠️ Deletes entire product catalog</div>
+              </div>
+              <button class="btn bdanger" onclick="dangerClear('products','products')">Clear Products</button>
+            </div>
+
+            <div style="padding:18px;background:rgba(255,23,68,0.08);border:2px solid rgba(255,23,68,0.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-size:14px;font-weight:800;color:var(--danger);margin-bottom:3px">💣 FACTORY RESET</div>
+                <div style="font-size:11px;color:var(--muted)">Delete ALL data and reset to fresh install</div>
+              </div>
+              <button class="btn" style="background:var(--danger);color:#fff;font-weight:800;box-shadow:0 4px 15px rgba(255,23,68,0.4)" onclick="factoryReset()">⚠️ Factory Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: ADVANCED ANALYTICS ══ -->
+      <div class="panel" id="panel-adv-analytics">
+        <div class="acard acard-glow">
+          <div class="acard-title">🔮 Business Performance Analytics</div>
+          <div class="stat-row" style="margin-bottom:18px">
+            <div class="stat-card s1"><div class="stat-ic">💰</div><div class="stat-val" id="adv-total-rev">—</div><div class="stat-label">Total Revenue</div></div>
+            <div class="stat-card s2"><div class="stat-ic">📈</div><div class="stat-val" id="adv-total-profit">—</div><div class="stat-label">Est. Profit</div></div>
+            <div class="stat-card s3"><div class="stat-ic">📊</div><div class="stat-val" id="adv-margin">—</div><div class="stat-label">Profit Margin</div></div>
+            <div class="stat-card s4"><div class="stat-ic">🧾</div><div class="stat-val" id="adv-avg-sale">—</div><div class="stat-label">Avg Sale Value</div></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">📅 Monthly Revenue (This Year)</div>
+            <canvas id="adv-revenue-chart" height="200"></canvas>
+          </div>
+          <div class="acard">
+            <div class="acard-title">🏆 Top Products by Revenue</div>
+            <div id="adv-top-products" style="font-size:13px;line-height:2"></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">💳 Payment Method Split</div>
+            <div id="adv-payment-split" style="font-size:13px;line-height:2"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">📦 Category Performance</div>
+            <div id="adv-cat-perf" style="font-size:13px;line-height:2"></div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">⚠️ Business Alerts</div>
+          <div id="adv-alerts"></div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: STAFF MANAGER ══ -->
+      <div class="panel" id="panel-adv-staff">
+        <div class="acard">
+          <div class="acard-title">👷 Staff Members</div>
+          <div class="info-chip">Staff added here sync with the POS system</div>
+          <button class="btn bpri bsm" onclick="openAdminStaffModal()" style="margin-bottom:14px">+ Add Staff Member</button>
+          <div class="tbl-wrap">
+            <table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Commission</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="admin-staff-tbl"></tbody></table>
+          </div>
+        </div>
+        <div id="admin-staff-form" style="display:none">
+          <div class="acard" style="border-color:rgba(108,99,255,0.3)">
+            <div class="acard-title">Staff Form</div>
+            <div class="grid2">
+              <div class="fg"><label>Full Name</label><input type="text" id="asf-name" placeholder="Staff name"></div>
+              <div class="fg"><label>Role</label><select id="asf-role"><option>Cashier</option><option>Technician</option><option>Manager</option><option>Sales</option><option>Other</option></select></div>
+              <div class="fg"><label>Phone</label><input type="tel" id="asf-phone" placeholder="+94..."></div>
+              <div class="fg"><label>Commission Rate (%)</label><input type="number" id="asf-comm" value="0" min="0" max="100" step="0.5"></div>
+              <div class="fg"><label>Commission Based On</label><select id="asf-comm-base"><option value="revenue">Revenue</option><option value="profit">Profit</option></select></div>
+              <div class="fg"><label>Status</label><select id="asf-status"><option>Active</option><option>Inactive</option></select></div>
+            </div>
+            <input type="hidden" id="asf-id">
+            <div class="action-row">
+              <button class="btn bpri" onclick="saveAdminStaff()">Save Staff</button>
+              <button class="btn" style="background:var(--card2);color:var(--text);border:1px solid var(--border)" onclick="document.getElementById('admin-staff-form').style.display='none'">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: TAX CONFIG ══ -->
+      <div class="panel" id="panel-adv-tax">
+        <div class="acard">
+          <div class="acard-title">Tax and GST Configuration</div>
+          <div class="info-chip">Tax settings apply globally to all POS sales</div>
+          <div class="grid2">
+            <div class="fg"><label>Default Tax Rate (%)</label><input type="number" id="tax-rate" min="0" max="100" step="0.5" placeholder="e.g. 15" oninput="updateTaxPreview()"></div>
+            <div class="fg"><label>Tax Label</label><input type="text" id="tax-label" placeholder="e.g. GST, VAT, Tax" oninput="updateTaxPreview()"></div>
+            <div class="fg full"><label>Tax Mode</label><select id="tax-mode" onchange="updateTaxPreview()"><option value="inclusive">Tax Inclusive (price includes tax)</option><option value="exclusive">Tax Exclusive (tax added on top)</option><option value="none">No Tax</option></select></div>
+            <div class="fg full" style="background:rgba(0,176,255,0.05);border:1px solid rgba(0,176,255,0.2);border-radius:10px;padding:14px"><div style="font-size:12px;color:var(--info);margin-bottom:8px;font-weight:700">Tax Preview</div><div id="tax-preview" style="font-size:13px;line-height:2;color:var(--muted)">Update settings to see preview</div></div>
+          </div>
+          <button class="btn bpri" onclick="saveTaxSettings()">Save Tax Settings</button>
+        </div>
+        <div class="acard"><div class="acard-title">Tax Collection Summary</div><div id="tax-summary" style="font-size:13px;line-height:2;color:var(--muted)">Loading...</div></div>
+      </div>
+
+      <!-- ══ PANEL: COMMISSION RULES ══ -->
+      <div class="panel" id="panel-adv-commission">
+        <div class="acard">
+          <div class="acard-title">Commission Rules and Settings</div>
+          <div class="info-chip">Commission is calculated automatically based on staff assignments to sales</div>
+          <div class="grid2">
+            <div class="fg"><label>Enable Commission Tracking</label><div class="toggle-wrap" style="margin-top:4px"><span style="font-size:13px">Commission system active</span><label class="toggle"><input type="checkbox" id="comm-enabled"><span class="slider"></span></label></div></div>
+            <div class="fg"><label>Frequency</label><select id="comm-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="daily">Daily</option></select></div>
+            <div class="fg"><label>Minimum Sales for Commission (Rs.)</label><input type="number" id="comm-min-sales" placeholder="e.g. 10000" min="0"></div>
+            <div class="fg"><label>Commission Payout Day</label><select id="comm-payout-day"><option value="1">1st of Month</option><option value="15">15th of Month</option><option value="last">Last Day of Month</option></select></div>
+          </div>
+          <button class="btn bpri" onclick="saveCommissionSettings()">Save Commission Settings</button>
+        </div>
+        <div class="acard"><div class="acard-title">Commission Report (This Month)</div><div id="comm-report" style="font-size:13px"></div></div>
+      </div>
+
+      <!-- ══ PANEL: NOTIFICATIONS ══ -->
+      <div class="panel" id="panel-adv-notifications">
+        <div class="acard">
+          <div class="acard-title">Notification and Alert Rules</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="toggle-wrap"><div><div style="font-size:13px;font-weight:600">Low Stock Alerts</div><div style="font-size:11px;color:var(--muted)">Notify when product falls below min stock</div></div><label class="toggle"><input type="checkbox" id="notif-lowstock" checked><span class="slider"></span></label></div>
+            <div class="toggle-wrap"><div><div style="font-size:13px;font-weight:600">Birthday Reminders</div><div style="font-size:11px;color:var(--muted)">Remind about customer birthdays 3 days before</div></div><label class="toggle"><input type="checkbox" id="notif-birthday" checked><span class="slider"></span></label></div>
+            <div class="toggle-wrap"><div><div style="font-size:13px;font-weight:600">Overdue Repair Alerts</div><div style="font-size:11px;color:var(--muted)">Alert when repair passes due date</div></div><label class="toggle"><input type="checkbox" id="notif-repair" checked><span class="slider"></span></label></div>
+            <div class="toggle-wrap"><div><div style="font-size:13px;font-weight:600">Credit Payment Due</div><div style="font-size:11px;color:var(--muted)">Alert when credit installment is due</div></div><label class="toggle"><input type="checkbox" id="notif-credit" checked><span class="slider"></span></label></div>
+            <div class="toggle-wrap"><div><div style="font-size:13px;font-weight:600">Daily Summary (End of Day)</div><div style="font-size:11px;color:var(--muted)">Show daily summary notification at closing</div></div><label class="toggle"><input type="checkbox" id="notif-daily"><span class="slider"></span></label></div>
+          </div>
+          <div style="margin-top:16px;padding:14px;background:var(--card2);border-radius:10px;border:1px solid var(--border)">
+            <div class="fg"><label>Low Stock Threshold Override</label><input type="number" id="notif-lowstock-threshold" placeholder="Uses product min stock if blank" min="0"></div>
+            <div class="fg"><label>WhatsApp Number for Alerts (optional)</label><input type="tel" id="notif-wa-number" placeholder="+94 77 xxx xxxx"></div>
+          </div>
+          <button class="btn bpri" style="margin-top:14px" onclick="saveNotificationSettings()">Save Notification Settings</button>
+        </div>
+        <div class="acard"><div class="acard-title">Current Active Alerts</div><div id="admin-alerts-list" style="font-size:13px"></div></div>
+      </div>
+
+      <!-- ══ PANEL: INVENTORY OVERVIEW ══ -->
+      <div class="panel" id="panel-adv-inventory">
+        <div class="acard acard-glow">
+          <div class="acard-title">📦 Inventory Health Overview</div>
+          <div class="stat-row" style="margin-bottom:16px">
+            <div class="stat-card s1"><div class="stat-ic">📦</div><div class="stat-val" id="inv-total-prods">—</div><div class="stat-label">Total Products</div></div>
+            <div class="stat-card s2"><div class="stat-ic">💰</div><div class="stat-val" id="inv-stock-value">—</div><div class="stat-label">Stock Value (Cost)</div></div>
+            <div class="stat-card s3"><div class="stat-ic">⚠️</div><div class="stat-val" id="inv-low-stock">—</div><div class="stat-label">Low Stock Items</div></div>
+            <div class="stat-card s4"><div class="stat-ic">💤</div><div class="stat-val" id="inv-dead-stock">—</div><div class="stat-label">Dead Stock Items</div></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">🏷️ Stock by Category</div>
+            <div id="inv-cat-breakdown" style="font-size:13px"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">📦 Batch Summary</div>
+            <div id="inv-batch-summary" style="font-size:13px"></div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">⚠️ Reorder Recommendations</div>
+          <div id="inv-reorder-list" style="font-size:13px"></div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: CRM DASHBOARD ══ -->
+      <div class="panel" id="panel-adv-crm">
+        <div class="acard acard-glow">
+          <div class="acard-title">👥 CRM Overview</div>
+          <div class="stat-row" style="margin-bottom:16px">
+            <div class="stat-card s1"><div class="stat-ic">👥</div><div class="stat-val" id="crm-total">—</div><div class="stat-label">Total Customers</div></div>
+            <div class="stat-card s2"><div class="stat-ic">👑</div><div class="stat-val" id="crm-vip">—</div><div class="stat-label">VIP Customers</div></div>
+            <div class="stat-card s3"><div class="stat-ic">😴</div><div class="stat-val" id="crm-atrisk">—</div><div class="stat-label">At-Risk (60d+)</div></div>
+            <div class="stat-card s4"><div class="stat-ic">📞</div><div class="stat-val" id="crm-followups">—</div><div class="stat-label">Pending Follow-ups</div></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">🏆 Top Customers by Revenue</div>
+            <div id="crm-top-customers" style="font-size:13px"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">🎂 Upcoming Birthdays</div>
+            <div id="crm-birthdays" style="font-size:13px"></div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">📞 Overdue Follow-ups</div>
+          <div id="crm-overdue-followups" style="font-size:13px"></div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: REPAIR MANAGEMENT ══ -->
+      <div class="panel" id="panel-adv-repair-mgmt">
+        <div class="acard acard-glow">
+          <div class="acard-title">🔧 Repair Shop Overview</div>
+          <div class="stat-row" style="margin-bottom:16px">
+            <div class="stat-card s1"><div class="stat-ic">🔧</div><div class="stat-val" id="rep-active">—</div><div class="stat-label">Active Repairs</div></div>
+            <div class="stat-card s2"><div class="stat-ic">✅</div><div class="stat-val" id="rep-done-month">—</div><div class="stat-label">Done This Month</div></div>
+            <div class="stat-card s3"><div class="stat-ic">🔴</div><div class="stat-val" id="rep-overdue">—</div><div class="stat-label">Overdue</div></div>
+            <div class="stat-card s4"><div class="stat-ic">💰</div><div class="stat-val" id="rep-revenue-month">—</div><div class="stat-label">Repair Revenue</div></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">📊 Repair Status Breakdown</div>
+            <div id="rep-status-breakdown" style="font-size:13px"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">⏱️ Recent Time Logs</div>
+            <div id="rep-time-logs" style="font-size:13px"></div>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="acard-title">🔴 Overdue Repairs — Action Required</div>
+          <div id="rep-overdue-list"></div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: SALES INTELLIGENCE ══ -->
+      <div class="panel" id="panel-adv-sales-intel">
+        <div class="acard acard-glow">
+          <div class="acard-title">📊 Sales Intelligence Dashboard</div>
+          <div class="stat-row" style="margin-bottom:16px">
+            <div class="stat-card s1"><div class="stat-ic">📈</div><div class="stat-val" id="si-this-month">—</div><div class="stat-label">This Month Revenue</div></div>
+            <div class="stat-card s2"><div class="stat-ic">📉</div><div class="stat-val" id="si-last-month">—</div><div class="stat-label">Last Month Revenue</div></div>
+            <div class="stat-card s3"><div class="stat-ic">🔮</div><div class="stat-val" id="si-forecast">—</div><div class="stat-label">Next Month Forecast</div></div>
+            <div class="stat-card s4"><div class="stat-ic">🎯</div><div class="stat-val" id="si-conversion">—</div><div class="stat-label">Avg Items/Sale</div></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">💡 Active Upsell Rules</div>
+            <div id="si-upsell-rules" style="font-size:13px"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">📅 Weekly Sales Heatmap</div>
+            <div id="si-heatmap" style="font-size:13px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: BRANDING ══ -->
+      <div class="panel" id="panel-adv-branding">
+        <div class="acard">
+          <div class="acard-title">🎨 Invoice & Receipt Design</div>
+          <div class="info-chip">ℹ️ Settings sync with POS Invoice Designer</div>
+          <div class="grid2">
+            <div class="fg"><label>Invoice Template</label>
+              <select id="brand-template">
+                <option value="classic">📄 Classic</option>
+                <option value="modern">🎨 Modern</option>
+                <option value="minimal">✨ Minimal</option>
+              </select>
+            </div>
+            <div class="fg"><label>Primary Color</label>
+              <input type="color" id="brand-color" value="#6c63ff">
+            </div>
+            <div class="fg full"><label>Shop Tagline / Footer</label>
+              <input type="text" id="brand-tagline" placeholder="e.g. Your trusted mobile partner since 2020">
+            </div>
+            <div class="fg full"><label>Logo URL</label>
+              <input type="text" id="brand-logo" placeholder="https://... (image URL)">
+            </div>
+          </div>
+          <button class="btn bpri" onclick="saveBrandSettings()">💾 Save Branding</button>
+        </div>
+        <div class="acard">
+          <div class="acard-title">📱 Digital Business Card / QR</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Share your shop info as a QR code</div>
+          <div id="brand-qr-preview" style="text-align:center;padding:20px;background:var(--card2);border-radius:10px">
+            <div style="font-size:40px;margin-bottom:10px">📱</div>
+            <div id="brand-shop-card" style="font-size:13px;line-height:2;color:var(--muted)">Load shop info...</div>
+            <button class="btn bpri bsm" style="margin-top:12px" onclick="generateBrandQR()">🔗 Generate Share Link</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: OPERATIONS ══ -->
+      <div class="panel" id="panel-adv-operations">
+        <div class="acard acard-glow">
+          <div class="acard-title">⚙️ Operations Overview</div>
+          <div class="stat-row" style="margin-bottom:16px">
+            <div class="stat-card s1"><div class="stat-ic">✅</div><div class="stat-val" id="ops-tasks-pending">—</div><div class="stat-label">Pending Tasks</div></div>
+            <div class="stat-card s2"><div class="stat-ic">🔴</div><div class="stat-val" id="ops-tasks-overdue">—</div><div class="stat-label">Overdue Tasks</div></div>
+            <div class="stat-card s3"><div class="stat-ic">👷</div><div class="stat-val" id="ops-staff-today">—</div><div class="stat-label">Staff Scheduled Today</div></div>
+            <div class="stat-card s4"><div class="stat-ic">⏱️</div><div class="stat-val" id="ops-repair-hours">—</div><div class="stat-label">Repair Hours Logged</div></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">✅ Today's Tasks</div>
+            <div id="ops-today-tasks" style="font-size:13px"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">📅 Today's Roster</div>
+            <div id="ops-today-roster" style="font-size:13px"></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="acard">
+            <div class="acard-title">☑️ Today's Checklist Status</div>
+            <div id="ops-checklist-status" style="font-size:13px"></div>
+          </div>
+          <div class="acard">
+            <div class="acard-title">🎁 Referral Summary</div>
+            <div id="ops-referrals" style="font-size:13px"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  ADMIN PANEL JAVASCRIPT
+// ═══════════════════════════════════════
+
+var ADMIN_PASS_KEY = 'st-admin-password';
+var DB_KEY = 'st-pos-v2-fallback';
+var SIDEBAR_CONFIG_KEY = 'st-admin-sidebar-config';
+
+// ── Helpers ──────────────────────────────────────────────────────────
+function getDB() {
+  // Try all keys POS might use
+  var keys = ['st-pos-v2-fallback', 'st-pos-v2'];
+  for (var i = 0; i < keys.length; i++) {
+    try {
+      var raw = localStorage.getItem(keys[i]);
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+  }
+  return null;
+}
+
+function saveDB(db) {
+  // Save to all keys POS reads from
+  var json = JSON.stringify(db);
+  localStorage.setItem('st-pos-v2-fallback', json);
+  localStorage.setItem('st-pos-v2', json);
+}
+
+function getAdminPass() {
+  return localStorage.getItem(ADMIN_PASS_KEY) || 'admin1234';
+}
+
+function toast(msg, clr) {
+  clr = clr || 'var(--success)';
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderLeftColor = clr;
+  el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 3000);
+}
+
+// ── Login ─────────────────────────────────────────────────────────────
+function doLogin() {
+  var pass = document.getElementById('admin-pass').value;
+  if (pass === getAdminPass()) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  } else {
+    var err = document.getElementById('login-err');
+    err.textContent = '❌ Wrong password. Try again.';
+    err.style.animation = 'none';
+    setTimeout(function(){ err.style.animation = 'shake 0.4s ease'; }, 10);
+    document.getElementById('admin-pass').value = '';
+  }
+}
+
+document.getElementById('admin-pass').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  if (!confirm('Logout from Admin Panel?')) return;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-pass').value = '';
+  document.getElementById('login-err').textContent = '';
+}
+
+// ── Panel Navigation ──────────────────────────────────────────────────
+var panelTitles = {
+  'overview': '📊 Dashboard',
+  'shopinfo': '🏪 Shop Information',
+  'appearance': '🎨 Appearance & Theme',
+  'sidebar-config': '☰ Sidebar Manager',
+  'users': '👤 Users & Roles',
+  'pinlock': '🔐 PIN & Password',
+  'features': '⚙️ Feature Toggles',
+  'pos-settings': '🛒 POS Settings',
+  'invoice': '🧾 Invoice Settings',
+  'data': '💾 Backup & Restore',
+  'danger': '⚠️ Danger Zone',
+  'adv-analytics': '🔮 Business Analytics',
+  'adv-staff': '👷 Staff Manager',
+  'adv-tax': '🧾 Tax & GST Config',
+  'adv-commission': '💰 Commission Rules',
+  'adv-notifications': '🔔 Notification Rules',
+  'adv-inventory': '📦 Inventory Overview',
+  'adv-crm': '👥 CRM Dashboard',
+  'adv-repair-mgmt': '🔧 Repair Management',
+  'adv-sales-intel': '📊 Sales Intelligence',
+  'adv-branding': '🎨 Branding & Design',
+  'adv-operations': '⚙️ Operations'
+};
+
+function goPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('panel-title').textContent = panelTitles[id] || id;
+  // Load panel data
+  if (id === 'overview') loadOverview();
+  if (id === 'shopinfo') loadShopInfo();
+  if (id === 'appearance') loadAppearance();
+  if (id === 'sidebar-config') loadSidebarConfig();
+  if (id === 'users') loadUsers();
+  if (id === 'pinlock') loadPinLock();
+  if (id === 'features') loadFeatures();
+  if (id === 'pos-settings') loadPOSSettings();
+  if (id === 'invoice') loadInvoiceSettings();
+  if (id === 'data') loadData();
+  if (id === 'adv-analytics') loadAdvAnalytics();
+  if (id === 'adv-staff') loadAdminStaff();
+  if (id === 'adv-tax') loadTaxPanel();
+  if (id === 'adv-commission') loadCommissionPanel();
+  if (id === 'adv-notifications') loadNotificationsPanel();
+  if (id === 'adv-inventory') loadAdvInventory();
+  if (id === 'adv-crm') loadAdvCRM();
+  if (id === 'adv-repair-mgmt') loadAdvRepairMgmt();
+  if (id === 'adv-sales-intel') loadAdvSalesIntel();
+  if (id === 'adv-branding') loadAdvBranding();
+  if (id === 'adv-operations') loadAdvOperations();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+function initApp() {
+  loadOverview();
+  loadAppearance();
+}
+
+// ── Overview ──────────────────────────────────────────────────────────
+function loadOverview() {
+  var db = getDB();
+  if (!db) {
+    document.getElementById('ov-shopinfo').innerHTML = '⚠️ POS data not found in browser.<br><br>Please:<br>1. Make sure <b>index.html</b> and <b>admin.html</b> are in the same folder<br>2. Open <b>index.html</b> first so data loads<br>3. Then come back here';
+    ['ov-products','ov-invoices','ov-customers','ov-repairs'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent='—'; });
+    return;
+  }
+  var s = db.settings || {};
+  document.getElementById('ov-products').textContent = (db.products||[]).length;
+  document.getElementById('ov-invoices').textContent = (db.invoices||[]).length;
+  document.getElementById('ov-customers').textContent = (db.customers||[]).length;
+  document.getElementById('ov-repairs').textContent = (db.repairs||[]).length;
+
+  document.getElementById('ov-shopinfo').innerHTML =
+    '<b>' + (s.shopName||'—') + '</b><br>' +
+    '📞 ' + (s.phone||'—') + '<br>' +
+    '📧 ' + (s.email||'—') + '<br>' +
+    '📍 ' + (s.address||'—') + '<br>' +
+    '💬 ' + (s.whatsapp||'—');
+
+  document.getElementById('ov-settings').innerHTML =
+    '🎨 Theme: ' + (s.theme || 'Default') + '<br>' +
+    '👤 Role: ' + (s.role || 'admin') + '<br>' +
+    '🏷️ Prefix: ' + (s.prefix || 'INV') + '<br>' +
+    '🔒 PIN Lock: ' + (s.pinLock ? '✅ On' : '❌ Off') + '<br>' +
+    '💰 Tax: ' + (s.tax||0) + '%';
+
+  // Low stock
+  var prods = db.products || [];
+  var low = prods.filter(function(p){ return p.stock <= (p.minStock||2); });
+  var tbody = document.getElementById('ov-lowstock-body');
+  if (!low.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--success);padding:20px">✅ All products have sufficient stock</td></tr>';
+  } else {
+    tbody.innerHTML = low.map(function(p){
+      var pct = p.minStock > 0 ? Math.round(p.stock/p.minStock*100) : 0;
+      var cls = p.stock === 0 ? 'bd' : 'bw';
+      var label = p.stock === 0 ? 'Out of Stock' : 'Low Stock';
+      return '<tr><td><b>'+p.name+'</b></td><td>'+p.category+'</td><td style="font-family:\'JetBrains Mono\',monospace;font-weight:700">'+p.stock+'</td><td>'+p.minStock+'</td><td><span class="badge '+cls+'">'+label+'</span></td></tr>';
+    }).join('');
+  }
+}
+
+// ── Shop Info ─────────────────────────────────────────────────────────
+function loadShopInfo() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  var fields = ['shopName','phone','email','whatsapp','address','fb','prefix','note','bank','accNo','accName','branch'];
+  fields.forEach(function(f){
+    var el = document.getElementById('s-'+f);
+    if (el) el.value = s[f] || '';
+  });
+}
+
+function saveShopInfo() {
+  var db = getDB(); if(!db){ toast('❌ No POS data','var(--danger)'); return; }
+  if(!db.settings) db.settings = {};
+  var fields = ['shopName','phone','email','whatsapp','address','fb','prefix','note','bank','accNo','accName','branch'];
+  fields.forEach(function(f){
+    var el = document.getElementById('s-'+f);
+    if (el) db.settings[f] = el.value.trim();
+  });
+  saveDB(db);
+  toast('✅ Shop information saved!');
+}
+
+// ── Appearance ────────────────────────────────────────────────────────
+function loadAppearance() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  // Theme swatches
+  var t = s.theme || '';
+  document.querySelectorAll('.cswatch').forEach(function(sw){
+    sw.classList.toggle('active', sw.dataset.theme === t);
+  });
+  // Dark mode
+  var dm = document.getElementById('t-darkmode');
+  if (dm) dm.checked = localStorage.getItem('st-pos-theme-mode') === 'light' ? false : (s.darkMode !== false);
+  // BG anim
+  var bg = document.getElementById('t-bganim');
+  if (bg) bg.checked = s.bgAnim !== false;
+  // Font size
+  updateFSButtons(s.fontSize || 'md');
+}
+
+function selectTheme(theme, el) {
+  document.querySelectorAll('.cswatch').forEach(function(sw){ sw.classList.remove('active'); });
+  el.classList.add('active');
+  saveSetting('theme', theme);
+  toast('✅ Theme changed to ' + (theme || 'Default'));
+}
+
+function applyCustomColor() {
+  var c = document.getElementById('custom-color').value;
+  saveSetting('customColor', c);
+  toast('✅ Custom color applied: ' + c);
+}
+
+function toggleDarkMode(val) {
+  localStorage.setItem('st-pos-theme-mode', val ? 'dark' : 'light');
+  saveSetting('darkMode', val);
+  toast('✅ Dark mode ' + (val ? 'enabled' : 'disabled'));
+}
+
+function setFontSize(size) {
+  saveSetting('fontSize', size);
+  updateFSButtons(size);
+  toast('✅ Font size set to ' + size);
+}
+
+function updateFSButtons(size) {
+  ['sm','md','lg'].forEach(function(s){
+    var el = document.getElementById('fs-'+s);
+    if (el) {
+      el.style.background = s === size ? 'var(--pri)' : 'var(--card2)';
+      el.style.color = s === size ? '#fff' : 'var(--muted)';
+      el.style.border = '1px solid ' + (s === size ? 'var(--pri)' : 'var(--border)');
+    }
+  });
+  var sizes = { sm:'12px', md:'14px', lg:'17px' };
+  document.getElementById('fs-preview-text').style.fontSize = sizes[size] || '14px';
+}
+
+// ── Sidebar Config ────────────────────────────────────────────────────
+var defaultSidebarItems = [
+  { id:'dashboard',    ic:'🏠', name:'Dashboard',       cat:'Main' },
+  { id:'pos',          ic:'🛒', name:'New Sale',         cat:'Main' },
+  { id:'inventory',    ic:'📦', name:'Inventory',        cat:'Management' },
+  { id:'repairs',      ic:'🔧', name:'Repairs',          cat:'Management' },
+  { id:'orders',       ic:'🌐', name:'Online Orders',    cat:'Management' },
+  { id:'customers',    ic:'👥', name:'Customers',        cat:'Management' },
+  { id:'invoices',     ic:'🧾', name:'Invoices',         cat:'Management' },
+  { id:'messages',     ic:'💬', name:'Messages',         cat:'Management' },
+  { id:'analytics',    ic:'📊', name:'Analytics',        cat:'Finance' },
+  { id:'credits',      ic:'💳', name:'Credit Sales',     cat:'Finance' },
+  { id:'suppliers',    ic:'🏭', name:'Suppliers',        cat:'Stock' },
+  { id:'stocklog',     ic:'📋', name:'Stock History',    cat:'Stock' },
+  { id:'returns',      ic:'🔄', name:'Returns/Refunds',  cat:'Stock' },
+  { id:'expenses',     ic:'💸', name:'Expenses',         cat:'Business' },
+  { id:'cashregister', ic:'🏧', name:'Cash Register',    cat:'Business' },
+  { id:'targets',      ic:'🎯', name:'Sales Targets',    cat:'Business' },
+  { id:'appointments', ic:'📅', name:'Appointments',     cat:'Business' },
+  { id:'barcodes',     ic:'🏷️', name:'Barcode Labels',   cat:'Business' },
+  { id:'bundles',      ic:'🎁', name:'Bundles/Packages', cat:'Business' },
+  { id:'loyalty',      ic:'⭐', name:'Loyalty Points',   cat:'Admin' },
+  { id:'reports',      ic:'📑', name:'Reports',          cat:'Admin' },
+  { id:'activitylog',  ic:'🔍', name:'Activity Log',     cat:'Admin' },
+  { id:'settings',     ic:'⚙️', name:'Settings',         cat:'Admin' },
+];
+
+function getSidebarConfig() {
+  try {
+    var raw = localStorage.getItem(SIDEBAR_CONFIG_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  // Default: all visible
+  return defaultSidebarItems.map(function(item){
+    return { id: item.id, visible: true };
+  });
+}
+
+function loadSidebarConfig() {
+  var config = getSidebarConfig();
+  var configMap = {};
+  config.forEach(function(c){ configMap[c.id] = c; });
+
+  var html = defaultSidebarItems.map(function(item){
+    var cfg = configMap[item.id] || { visible: true };
+    var checked = cfg.visible ? 'checked' : '';
+    return '<div class="sidebar-item-row" id="srow-'+item.id+'">' +
+      '<span class="drag-handle">⋮⋮</span>' +
+      '<div class="sitem-info">' +
+        '<span class="sitem-ic">'+item.ic+'</span>' +
+        '<div><div class="sitem-name">'+item.name+'</div>' +
+        '<div class="sitem-cat">'+item.cat+'</div></div>' +
+      '</div>' +
+      '<label class="toggle" style="margin-left:10px">' +
+        '<input type="checkbox" id="svis-'+item.id+'" '+checked+'>' +
+        '<div class="toggle-slider"></div>' +
+      '</label>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('sidebar-items-list').innerHTML = html;
+}
+
+function saveSidebarConfig() {
+  var config = defaultSidebarItems.map(function(item){
+    var el = document.getElementById('svis-'+item.id);
+    return { id: item.id, visible: el ? el.checked : true };
+  });
+  localStorage.setItem(SIDEBAR_CONFIG_KEY, JSON.stringify(config));
+
+  // Apply to POS: update nitem display via shared localStorage flag
+  saveSetting('sidebarConfig', JSON.stringify(config));
+  toast('✅ Sidebar config saved! Reload POS to apply.');
+}
+
+function resetSidebarConfig() {
+  if (!confirm('Reset sidebar to defaults?')) return;
+  localStorage.removeItem(SIDEBAR_CONFIG_KEY);
+  loadSidebarConfig();
+  saveSetting('sidebarConfig', null);
+  toast('✅ Sidebar reset to defaults');
+}
+
+// ── Users & Roles ─────────────────────────────────────────────────────
+function loadUsers() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  var roleEl = document.getElementById('u-role');
+  if (roleEl) roleEl.value = s.role || 'admin';
+  var pinEl = document.getElementById('u-cashier-pin');
+  if (pinEl) pinEl.value = s.cashierPin || '';
+  updateRoleDisplay();
+}
+
+function updateRoleDisplay() {
+  var role = document.getElementById('u-role') ? document.getElementById('u-role').value : 'admin';
+  var desc = document.getElementById('role-desc');
+  if (desc) {
+    if (role === 'admin') {
+      desc.innerHTML = '👑 <b>Admin Mode</b><br>Full access to all features, reports, settings, and data management.';
+    } else {
+      desc.innerHTML = '🏪 <b>Cashier Mode</b><br>Limited to sales, inventory, repairs & daily operations. Analytics, reports and settings are hidden.';
+    }
+  }
+}
+
+function saveCashierPIN() {
+  var pin = document.getElementById('u-cashier-pin').value;
+  var pin2 = document.getElementById('u-cashier-pin2').value;
+  if (pin && pin.length !== 4) { toast('❌ PIN must be exactly 4 digits','var(--danger)'); return; }
+  if (pin !== pin2) { toast('❌ PINs do not match','var(--danger)'); return; }
+  saveSetting('cashierPin', pin);
+  saveSetting('role', document.getElementById('u-role').value);
+  toast('✅ Role and PIN saved!');
+}
+
+function clearCashierPIN() {
+  document.getElementById('u-cashier-pin').value = '';
+  document.getElementById('u-cashier-pin2').value = '';
+  saveSetting('cashierPin', '');
+  toast('✅ Cashier PIN cleared');
+}
+
+// ── PIN & Password ────────────────────────────────────────────────────
+function loadPinLock() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  var el = document.getElementById('p-pospin');
+  if (el) el.value = s.pin || '';
+  var pl = document.getElementById('ps-pinlock');
+  if (pl) pl.checked = !!s.pinLock;
+}
+
+function changeAdminPass() {
+  var cur = document.getElementById('p-current').value;
+  var nw = document.getElementById('p-new').value;
+  var conf = document.getElementById('p-confirm').value;
+  if (cur !== getAdminPass()) { toast('❌ Current password wrong','var(--danger)'); return; }
+  if (nw.length < 6) { toast('❌ Password must be at least 6 characters','var(--danger)'); return; }
+  if (nw !== conf) { toast('❌ New passwords do not match','var(--danger)'); return; }
+  localStorage.setItem(ADMIN_PASS_KEY, nw);
+  document.getElementById('p-current').value = '';
+  document.getElementById('p-new').value = '';
+  document.getElementById('p-confirm').value = '';
+  toast('✅ Admin password changed!');
+}
+
+function savePOSPIN() {
+  var pin = document.getElementById('p-pospin').value;
+  if (pin && pin.length !== 4) { toast('❌ PIN must be exactly 4 digits','var(--danger)'); return; }
+  saveSetting('pin', pin);
+  toast('✅ POS startup PIN ' + (pin ? 'set to ' + pin : 'cleared'));
+}
+
+// ── Features ──────────────────────────────────────────────────────────
+function loadFeatures() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  var feats = ['credits','split','coupons','loyalty','bundles','repairs','orders','appointments','whatsapp','analytics','print','scanner','barcodes','reports'];
+  feats.forEach(function(f){
+    var el = document.getElementById('f-'+f);
+    if (el) el.checked = s['feat_'+f] !== false; // default ON
+  });
+}
+
+function saveAllFeatures() {
+  var feats = ['credits','split','coupons','loyalty','bundles','repairs','orders','appointments','whatsapp','analytics','print','scanner','barcodes','reports'];
+  var db = getDB(); if(!db) return;
+  if (!db.settings) db.settings = {};
+  feats.forEach(function(f){
+    var el = document.getElementById('f-'+f);
+    if (el) db.settings['feat_'+f] = el.checked;
+  });
+  saveDB(db);
+  toast('✅ Feature settings saved!');
+}
+
+// ── POS Settings ──────────────────────────────────────────────────────
+function loadPOSSettings() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  setVal('ps-tax', s.taxPct||0);
+  setVal('ps-discount', s.defaultDiscount||0);
+  setVal('ps-currency', s.currency||'Rs.');
+  setVal('ps-lowstock', s.lowStockWarn||5);
+  setVal('ps-invstart', s.invStart||1);
+  setVal('ps-loyalty-ratio', s.loyaltyRatio||'1 point per Rs.100');
+  setChk('ps-stocknotif', s.stockNotif !== false);
+  setChk('ps-showprofit', s.showProfit !== false);
+  setChk('ps-pinlock', !!s.pinLock);
+}
+
+function savePOSSettings() {
+  var db = getDB(); if(!db) return;
+  if(!db.settings) db.settings = {};
+  db.settings.taxPct = parseFloat(document.getElementById('ps-tax').value)||0;
+  db.settings.defaultDiscount = parseFloat(document.getElementById('ps-discount').value)||0;
+  db.settings.currency = document.getElementById('ps-currency').value || 'Rs.';
+  db.settings.lowStockWarn = parseInt(document.getElementById('ps-lowstock').value)||5;
+  db.settings.invStart = parseInt(document.getElementById('ps-invstart').value)||1;
+  db.settings.loyaltyRatio = document.getElementById('ps-loyalty-ratio').value;
+  db.settings.stockNotif = document.getElementById('ps-stocknotif').checked;
+  db.settings.showProfit = document.getElementById('ps-showprofit').checked;
+  db.settings.pinLock = document.getElementById('ps-pinlock').checked;
+  saveDB(db);
+  toast('✅ POS settings saved!');
+}
+
+// ── Invoice ───────────────────────────────────────────────────────────
+function loadInvoiceSettings() {
+  var db = getDB(); if(!db) return;
+  var s = db.settings || {};
+  setVal('inv-prefix', s.prefix||'INV');
+  setVal('inv-padding', s.invPadding||4);
+  setVal('inv-header', s.invHeader||'');
+  setVal('inv-footer', s.note||'Thank you for choosing us!');
+  setChk('inv-bank', s.invBank !== false);
+  setChk('inv-wa', s.invWA !== false);
+  setChk('inv-fb', !!s.invFB);
+  setChk('inv-tax', !!s.invTax);
+}
+
+function saveInvoiceSettings() {
+  var db = getDB(); if(!db) return;
+  if(!db.settings) db.settings = {};
+  db.settings.prefix = document.getElementById('inv-prefix').value || 'INV';
+  db.settings.invPadding = parseInt(document.getElementById('inv-padding').value)||4;
+  db.settings.invHeader = document.getElementById('inv-header').value;
+  db.settings.note = document.getElementById('inv-footer').value;
+  db.settings.invBank = document.getElementById('inv-bank').checked;
+  db.settings.invWA = document.getElementById('inv-wa').checked;
+  db.settings.invFB = document.getElementById('inv-fb').checked;
+  db.settings.invTax = document.getElementById('inv-tax').checked;
+  saveDB(db);
+  toast('✅ Invoice settings saved!');
+}
+
+// ── Data ──────────────────────────────────────────────────────────────
+function loadData() {
+  var db = getDB();
+  var el = document.getElementById('db-summary');
+  if (!db) { el.innerHTML = '⚠️ No POS data found.'; return; }
+  var s = db.settings||{};
+  el.innerHTML =
+    '🏪 Shop: <b>' + (s.shopName||'Unknown') + '</b><br>' +
+    '📦 Products: <b>' + (db.products||[]).length + '</b><br>' +
+    '🧾 Invoices: <b>' + (db.invoices||[]).length + '</b><br>' +
+    '👥 Customers: <b>' + (db.customers||[]).length + '</b><br>' +
+    '🔧 Repairs: <b>' + (db.repairs||[]).length + '</b><br>' +
+    '🌐 Orders: <b>' + (db.orders||[]).length + '</b><br>' +
+    '💳 Credits: <b>' + (db.credits||[]).length + '</b><br>' +
+    '💾 Data Size: <b>' + (JSON.stringify(db).length / 1024).toFixed(1) + ' KB</b>';
+}
+
+function exportJSON() {
+  var db = getDB();
+  if (!db) { toast('❌ No data to export','var(--danger)'); return; }
+  var blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ST-POS-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ JSON backup downloaded!');
+}
+
+function exportCSV() {
+  var db = getDB();
+  if (!db) { toast('❌ No data','var(--danger)'); return; }
+  var prods = db.products || [];
+  var rows = [['Name','Category','Price','Cost','Stock','MinStock']];
+  prods.forEach(function(p){ rows.push([p.name,p.category,p.price,p.cost,p.stock,p.minStock]); });
+  var csv = rows.map(function(r){ return r.join(','); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ST-POS-products-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ CSV exported!');
+}
+
+function importJSON() {
+  var file = document.getElementById('import-file').files[0];
+  if (!file) { toast('❌ Select a file first','var(--danger)'); return; }
+  if (!confirm('⚠️ This will REPLACE all current POS data. Are you sure?')) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      saveDB(data);
+      toast('✅ Data restored successfully! Reload POS to see changes.');
+      loadData();
+    } catch(err) {
+      toast('❌ Invalid JSON file','var(--danger)');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Danger ────────────────────────────────────────────────────────────
+function dangerClear(key, label) {
+  if (!confirm('⚠️ DELETE ALL ' + label.toUpperCase() + '?\n\nThis cannot be undone!')) return;
+  var code = prompt('Type DELETE to confirm:');
+  if (code !== 'DELETE') { toast('❌ Cancelled','var(--warning)'); return; }
+  var db = getDB(); if(!db) return;
+  db[key] = [];
+  saveDB(db);
+  toast('🗑️ All ' + label + ' cleared!', 'var(--danger)');
+  loadOverview();
+}
+
+function factoryReset() {
+  if (!confirm('⚠️⚠️ FACTORY RESET?\n\nThis will delete ALL data including products, invoices, customers, repairs, settings.\n\nThis CANNOT be undone!')) return;
+  var code = prompt('Type RESET to confirm factory reset:');
+  if (code !== 'RESET') { toast('❌ Cancelled','var(--warning)'); return; }
+  localStorage.removeItem(DB_KEY);
+  localStorage.removeItem(SIDEBAR_CONFIG_KEY);
+  toast('💣 Factory reset complete! POS data cleared.', 'var(--danger)');
+  setTimeout(function(){ loadOverview(); }, 500);
+}
+
+// ── Shared Setting Helper ─────────────────────────────────────────────
+function saveSetting(key, value) {
+  var db = getDB();
+  if (!db) { toast('❌ No POS data found. Open POS first.','var(--danger)'); return; }
+  if (!db.settings) db.settings = {};
+  if (value === null) delete db.settings[key];
+  else db.settings[key] = value;
+  saveDB(db);
+}
+
+function setVal(id, val) { var el=document.getElementById(id); if(el) el.value = val; }
+function setChk(id, val) { var el=document.getElementById(id); if(el) el.checked = !!val; }
+
+// ═══════════════════════════════════════
+// NEW BUSINESS TOOLS PANELS
+// ═══════════════════════════════════════
+
+function fmtRs(n){ return 'Rs. '+(Math.round(n)||0).toLocaleString(); }
+function parseAdminDate2(str){ if(!str) return null; var iso=str.match(/^(\d{4})-(\d{2})-(\d{2})/); if(iso) return new Date(str); var sl=str.match(/^(\d{2})\/(\d{2})\/(\d{4})/); if(sl) return new Date(sl[3]+'-'+sl[2]+'-'+sl[1]); var d=new Date(str); return isNaN(d)?null:d; }
+
+// ── INVENTORY OVERVIEW ──────────────────────────────────────────────
+function loadAdvInventory() {
+  var db = getDB(); if (!db) return;
+  var products = db.products || [];
+  var invoices = db.invoices || [];
+  var batches = db.batches || [];
+
+  // Last sold per product
+  var lastSold = {};
+  invoices.forEach(function(inv){ (inv.items||[]).forEach(function(it){ var d=parseAdminDate2(inv.date); if(!lastSold[it.id]||d>lastSold[it.id]) lastSold[it.id]=d; }); });
+  var today = new Date();
+
+  var stockVal = products.reduce(function(a,p){ return a+(p.cost||0)*(p.stock||0); },0);
+  var lowStock = products.filter(function(p){ return p.stock<=(p.minStock||2); });
+  var deadStock = products.filter(function(p){ var ls=lastSold[p.id]; return !ls||(today-ls)/86400000>90; });
+
+  document.getElementById('inv-total-prods').textContent = products.length;
+  document.getElementById('inv-stock-value').textContent = fmtRs(stockVal);
+  document.getElementById('inv-low-stock').textContent = lowStock.length;
+  document.getElementById('inv-dead-stock').textContent = deadStock.length;
+
+  // Category breakdown
+  var cats = {};
+  products.forEach(function(p){ var c=p.category||'Other'; if(!cats[c]) cats[c]={count:0,stock:0,value:0}; cats[c].count++; cats[c].stock+=p.stock||0; cats[c].value+=(p.cost||0)*(p.stock||0); });
+  var catEl = document.getElementById('inv-cat-breakdown');
+  catEl.innerHTML = Object.entries(cats).map(function(e){ return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span>'+e[0]+' <span style="color:var(--muted);font-size:11px">('+e[1].count+' products)</span></span><span style="font-size:11px"><strong>'+e[1].stock+'</strong> units | '+fmtRs(e[1].value)+'</span></div>'; }).join('') || '<div style="color:var(--muted)">No products</div>';
+
+  // Batch summary
+  var batchEl = document.getElementById('inv-batch-summary');
+  var expiring = batches.filter(function(b){ var d=b.expiry?new Date(b.expiry):null; var s=new Date(); s.setDate(s.getDate()+30); return d&&d>today&&d<=s; });
+  var expired = batches.filter(function(b){ return b.expiry&&new Date(b.expiry)<=today; });
+  batchEl.innerHTML = '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>Total Batches</span><strong>'+batches.length+'</strong></div>'+
+    '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span style="color:var(--warning)">Expiring Soon (30d)</span><strong style="color:var(--warning)">'+expiring.length+'</strong></div>'+
+    '<div style="padding:7px 0;display:flex;justify-content:space-between"><span style="color:var(--danger)">Expired</span><strong style="color:var(--danger)">'+expired.length+'</strong></div>';
+
+  // Reorder recommendations
+  var reorderEl = document.getElementById('inv-reorder-list');
+  reorderEl.innerHTML = lowStock.length ? '<table style="width:100%;font-size:12px"><thead><tr><th>Product</th><th>Current</th><th>Min</th><th>Suggested Order</th></tr></thead><tbody>'+
+    lowStock.map(function(p){ var sugg=Math.max((p.minStock||2)*3-p.stock,1); return '<tr><td>'+p.name+'</td><td style="color:var(--danger)">'+p.stock+'</td><td>'+p.minStock+'</td><td style="color:var(--success);font-weight:700">+'+sugg+'</td></tr>'; }).join('')+'</tbody></table>' :
+    '<div style="color:var(--success);padding:10px">✅ All products adequately stocked</div>';
+}
+
+// ── CRM DASHBOARD ────────────────────────────────────────────────────
+function loadAdvCRM() {
+  var db = getDB(); if (!db) return;
+  var customers = db.customers || [];
+  var invoices = db.invoices || [];
+  var repairs = db.repairs || [];
+  var followups = db.followups || [];
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  // Segment customers
+  var vip=0, atRisk=0;
+  var custRevenue = {};
+  invoices.forEach(function(inv){ custRevenue[inv.customer]=(custRevenue[inv.customer]||0)+(inv.total||0); });
+  customers.forEach(function(c){
+    var rev = custRevenue[c.name]||0;
+    var lastInvs = invoices.filter(function(inv){ return inv.customer===c.name; });
+    var lastDate = lastInvs.length?Math.max.apply(null,lastInvs.map(function(inv){ return parseAdminDate2(inv.date)||0; })):0;
+    var days = lastDate ? (today-lastDate)/86400000 : 999;
+    if(rev>20000||lastInvs.length>10) vip++;
+    else if(days>60&&lastInvs.length>0) atRisk++;
+  });
+
+  document.getElementById('crm-total').textContent = customers.length;
+  document.getElementById('crm-vip').textContent = vip;
+  document.getElementById('crm-atrisk').textContent = atRisk;
+  document.getElementById('crm-followups').textContent = followups.filter(function(f){ return f.status!=='done'; }).length;
+
+  // Top customers
+  var topCusts = Object.entries(custRevenue).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6);
+  document.getElementById('crm-top-customers').innerHTML = topCusts.length ?
+    topCusts.map(function(e,i){ return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span>'+(i+1)+'. '+e[0]+'</span><strong style="color:var(--success)">'+fmtRs(e[1])+'</strong></div>'; }).join('') :
+    '<div style="color:var(--muted)">No sales data yet</div>';
+
+  // Birthdays
+  var now2 = new Date();
+  var bdayEl = document.getElementById('crm-birthdays');
+  var upcoming = customers.filter(function(c){
+    if(!c.birthday) return false;
+    var parts = c.birthday.split('-');
+    if(parts.length<2) return false;
+    var bday = new Date(now2.getFullYear(), parseInt(parts[1])-1, parseInt(parts[2])||parseInt(parts[0]));
+    if(bday < now2) bday.setFullYear(now2.getFullYear()+1);
+    return (bday-now2)/86400000 <= 30;
+  });
+  bdayEl.innerHTML = upcoming.length ? upcoming.map(function(c){ return '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>🎂 '+c.name+'</span><span style="font-size:11px;color:var(--muted)">'+c.birthday+'</span></div>'; }).join('') : '<div style="color:var(--muted);padding:8px">No birthdays in next 30 days</div>';
+
+  // Overdue followups
+  var overdueFu = followups.filter(function(f){ var d=f.dueDate?new Date(f.dueDate):null; if(d) d.setHours(0,0,0,0); return f.status!=='done'&&d&&d<today; }).slice(0,8);
+  document.getElementById('crm-overdue-followups').innerHTML = overdueFu.length ?
+    overdueFu.map(function(f){ return '<div style="padding:8px;margin-bottom:6px;background:rgba(255,23,68,0.06);border-left:3px solid var(--danger);border-radius:6px;display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:12px">'+f.customer+'</strong><div style="font-size:11px;color:var(--muted)">'+f.note+'</div></div><div style="font-size:11px;color:var(--danger)">Due: '+f.dueDate+'</div></div>'; }).join('') :
+    '<div style="color:var(--success);padding:10px">✅ No overdue follow-ups</div>';
+}
+
+// ── REPAIR MANAGEMENT ────────────────────────────────────────────────
+function loadAdvRepairMgmt() {
+  var db = getDB(); if (!db) return;
+  var repairs = db.repairs || [];
+  var now = new Date();
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var active = repairs.filter(function(r){ return r.status!=='Delivered'; });
+  var doneMonth = repairs.filter(function(r){ var d=parseAdminDate2(r.date); return (r.status==='Delivered'||r.status==='Done')&&d&&d>=monthStart; });
+  var overdue = repairs.filter(function(r){ return r.status!=='Delivered'&&r.dueDate&&new Date(r.dueDate)<now; });
+  var repRevMonth = doneMonth.reduce(function(a,r){ return a+(r.cost||0); },0);
+
+  document.getElementById('rep-active').textContent = active.length;
+  document.getElementById('rep-done-month').textContent = doneMonth.length;
+  document.getElementById('rep-overdue').textContent = overdue.length;
+  document.getElementById('rep-revenue-month').textContent = fmtRs(repRevMonth);
+
+  // Status breakdown
+  var statusCount = {};
+  repairs.forEach(function(r){ statusCount[r.status]=(statusCount[r.status]||0)+1; });
+  document.getElementById('rep-status-breakdown').innerHTML = Object.entries(statusCount).map(function(e){ return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span>'+e[0]+'</span><strong>'+e[1]+'</strong></div>'; }).join('');
+
+  // Timer logs
+  var logs = (db.timerLogs||[]).slice(-5).reverse();
+  var fmt = function(s){ var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60; return [h,m,sc].map(function(v){ return String(v).padStart(2,'0'); }).join(':'); };
+  document.getElementById('rep-time-logs').innerHTML = logs.length ? logs.map(function(l){ return '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span style="font-size:12px">'+l.repairName+'</span><span style="color:var(--primary);font-weight:700">'+fmt(l.seconds)+'</span></div>'; }).join('') : '<div style="color:var(--muted)">No time logs yet</div>';
+
+  // Overdue list
+  document.getElementById('rep-overdue-list').innerHTML = overdue.length ?
+    '<table style="width:100%;font-size:12px"><thead><tr><th>ID</th><th>Customer</th><th>Device</th><th>Issue</th><th>Due Date</th><th>Status</th></tr></thead><tbody>'+
+    overdue.map(function(r){ return '<tr><td>R-'+r.id+'</td><td>'+r.customer+'</td><td>'+r.device+'</td><td>'+r.issue+'</td><td style="color:var(--danger)">'+r.dueDate+'</td><td>'+r.status+'</td></tr>'; }).join('')+'</tbody></table>' :
+    '<div style="color:var(--success);padding:10px">✅ No overdue repairs</div>';
+}
+
+// ── SALES INTELLIGENCE ────────────────────────────────────────────────
+function loadAdvSalesIntel() {
+  var db = getDB(); if (!db) return;
+  var invoices = db.invoices || [];
+  var now = new Date();
+  var thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var lastMonthStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  var lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  var thisMonthInvs = invoices.filter(function(inv){ var d=parseAdminDate2(inv.date); return d&&d>=thisMonthStart; });
+  var lastMonthInvs = invoices.filter(function(inv){ var d=parseAdminDate2(inv.date); return d&&d>=lastMonthStart&&d<=lastMonthEnd; });
+  var thisRev = thisMonthInvs.reduce(function(a,inv){ return a+(inv.total||0); },0);
+  var lastRev = lastMonthInvs.reduce(function(a,inv){ return a+(inv.total||0); },0);
+
+  // Forecast: simple trend
+  var monthlyTotals = {};
+  invoices.forEach(function(inv){ var d=parseAdminDate2(inv.date); if(!d) return; var k=d.getFullYear()+'-'+d.getMonth(); monthlyTotals[k]=(monthlyTotals[k]||0)+(inv.total||0); });
+  var vals = Object.values(monthlyTotals).slice(-6);
+  var forecast = vals.length>=2 ? Math.max(0, vals[vals.length-1]+(vals[vals.length-1]-vals[vals.length-2])) : thisRev;
+
+  var avgItems = thisMonthInvs.length ? thisMonthInvs.reduce(function(a,inv){ return a+(inv.items||[]).length; },0)/thisMonthInvs.length : 0;
+
+  document.getElementById('si-this-month').textContent = fmtRs(thisRev);
+  document.getElementById('si-last-month').textContent = fmtRs(lastRev);
+  document.getElementById('si-forecast').textContent = fmtRs(forecast);
+  document.getElementById('si-conversion').textContent = avgItems.toFixed(1);
+
+  // Upsell rules
+  var rules = db.upsellRules || [];
+  document.getElementById('si-upsell-rules').innerHTML = rules.length ?
+    rules.slice(0,5).map(function(r){ return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12px"><strong>'+r.trigger+'</strong> → '+r.suggest+'</div>'; }).join('') :
+    '<div style="color:var(--muted)">No upsell rules. Add from POS → Upsell Engine.</div>';
+
+  // Day heatmap
+  var dayTotals=[0,0,0,0,0,0,0], dayCounts=[0,0,0,0,0,0,0];
+  invoices.forEach(function(inv){ var d=parseAdminDate2(inv.date); if(!d) return; dayTotals[d.getDay()]+=(inv.total||0); dayCounts[d.getDay()]++; });
+  var dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var maxAvg=Math.max.apply(null,dayTotals.map(function(t,i){ return dayCounts[i]?t/dayCounts[i]:0; }))||1;
+  document.getElementById('si-heatmap').innerHTML = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">'+
+    dayNames.map(function(d,i){ var avg=dayCounts[i]?dayTotals[i]/dayCounts[i]:0; var pct=avg/maxAvg; return '<div style="background:rgba(108,99,255,'+pct.toFixed(2)+');border-radius:6px;padding:8px 2px"><div style="font-size:10px;color:var(--muted)">'+d+'</div><div style="font-size:11px;font-weight:700">'+fmtRs(avg).replace('Rs. ','')+'</div></div>'; }).join('')+'</div>';
+}
+
+// ── BRANDING ──────────────────────────────────────────────────────────
+function loadAdvBranding() {
+  var db = getDB(); if (!db) return;
+  var d = db.invDesign || {};
+  var s = db.settings || {};
+  var setVal3 = function(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; };
+  setVal3('brand-template', d.template||'classic');
+  setVal3('brand-color', d.color||'#6c63ff');
+  setVal3('brand-tagline', d.footer||'Thank you for choosing ST Mobile!');
+  setVal3('brand-logo', d.logoUrl||'');
+
+  var cardEl = document.getElementById('brand-shop-card');
+  if(cardEl) cardEl.innerHTML = '<strong>'+s.shopName+'</strong><br>'+s.phone+'<br>'+s.address+'<br>'+s.whatsapp;
+}
+
+function saveBrandSettings() {
+  var db = getDB(); if (!db) { toast('No POS data!','var(--danger)'); return; }
+  if (!db.invDesign) db.invDesign = {};
+  db.invDesign.template = document.getElementById('brand-template').value;
+  db.invDesign.color = document.getElementById('brand-color').value;
+  db.invDesign.footer = document.getElementById('brand-tagline').value;
+  db.invDesign.logoUrl = document.getElementById('brand-logo').value;
+  saveDB(db); toast('✅ Branding saved! Sync with POS.');
+}
+
+function generateBrandQR() {
+  var db = getDB(); if (!db) return;
+  var s = db.settings || {};
+  var text = encodeURIComponent('📱 '+s.shopName+'\n📞 '+s.phone+'\n💬 '+s.whatsapp+'\n📍 '+s.address);
+  var url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+text;
+  window.open(url, '_blank');
+  toast('✅ QR generated!');
+}
+
+// ── OPERATIONS DASHBOARD ──────────────────────────────────────────────
+function loadAdvOperations() {
+  var db = getDB(); if (!db) return;
+  var tasks = db.tasks || [];
+  var rosterShifts = db.rosterShifts || [];
+  var timerLogs = db.timerLogs || [];
+  var referrals = db.referrals || [];
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  var pending = tasks.filter(function(t){ return t.status!=='done'; });
+  var overdue = pending.filter(function(t){ var d=t.dueDate?new Date(t.dueDate):null; if(d) d.setHours(0,0,0,0); return d&&d<today; });
+  var todayShifts = rosterShifts.filter(function(s){ return s.date===todayStr; });
+  var totalHours = timerLogs.reduce(function(a,l){ return a+(l.seconds||0); },0);
+
+  document.getElementById('ops-tasks-pending').textContent = pending.length;
+  document.getElementById('ops-tasks-overdue').textContent = overdue.length;
+  document.getElementById('ops-staff-today').textContent = todayShifts.length;
+  document.getElementById('ops-repair-hours').textContent = Math.round(totalHours/3600)+'h';
+
+  // Today's tasks
+  var todayTasks = pending.filter(function(t){ var d=t.dueDate?new Date(t.dueDate):null; if(d) d.setHours(0,0,0,0); return d&&d.getTime()===today.getTime(); });
+  var tasksEl = document.getElementById('ops-today-tasks');
+  tasksEl.innerHTML = todayTasks.length ? todayTasks.map(function(t){ return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between"><span>'+(t.priority==='high'?'🔴 ':t.priority==='medium'?'🟡 ':'🟢 ')+t.title+'</span><span style="color:var(--muted)">'+(t.assignedTo||'—')+'</span></div>'; }).join('') : '<div style="color:var(--muted)">No tasks due today</div>';
+
+  // Today's roster
+  var rosterEl = document.getElementById('ops-today-roster');
+  rosterEl.innerHTML = todayShifts.length ? todayShifts.map(function(s){ return '<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;justify-content:space-between"><strong>'+s.staffName+'</strong><span style="color:var(--primary)">'+s.start+' — '+s.end+'</span></div>'; }).join('') : '<div style="color:var(--muted)">No staff scheduled today</div>';
+
+  // Checklist status
+  var checkState = db.settings.checklistState || {};
+  var todayLabel = new Date().toLocaleDateString();
+  var openItems = db.settings.openChecklist || [];
+  var closeItems = db.settings.closeChecklist || [];
+  var openDone = openItems.filter(function(_,i){ return (checkState.open||{})[todayLabel+'-'+i]; }).length;
+  var closeDone = closeItems.filter(function(_,i){ return (checkState.close||{})[todayLabel+'-'+i]; }).length;
+  document.getElementById('ops-checklist-status').innerHTML =
+    '<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>🌅 Opening</span><span style="color:'+(openDone===openItems.length?'var(--success)':'var(--warning)')+'">'+openDone+'/'+openItems.length+' done</span></div>'+
+    '<div style="padding:8px 0;display:flex;justify-content:space-between"><span>🌙 Closing</span><span style="color:'+(closeDone===closeItems.length?'var(--success)':'var(--warning)')+'">'+closeDone+'/'+closeItems.length+' done</span></div>';
+
+  // Referrals
+  var refEl = document.getElementById('ops-referrals');
+  var totalBonus = referrals.reduce(function(a,r){ return a+(r.bonus||0); },0);
+  refEl.innerHTML = '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>Total Referrals</span><strong>'+referrals.length+'</strong></div>'+
+    '<div style="padding:7px 0;display:flex;justify-content:space-between"><span>Total Bonus Given</span><strong style="color:var(--warning)">'+fmtRs(totalBonus)+'</strong></div>';
+}
+
+
+
+// ═══════════════════════════════════════
+// ADVANCED ADMIN FEATURES
+// ═══════════════════════════════════════
+
+// Chart.js loader
+var advChartInstance = null;
+
+function loadAdvAnalytics() {
+  var db = getDB();
+  if (!db) { return; }
+  var invoices = db.invoices || [];
+  var products = db.products || [];
+  var repairs = db.repairs || [];
+  
+  var totalRev = invoices.reduce(function(a,inv){ return a+(inv.total||0); }, 0);
+  var repRev = repairs.filter(function(r){ return r.status==='Delivered'||r.status==='Done'; }).reduce(function(a,r){ return a+(r.cost||0); }, 0);
+  var allRev = totalRev + repRev;
+  
+  var totalProfit = 0;
+  invoices.forEach(function(inv) {
+    (inv.items||[]).forEach(function(it) {
+      var p = products.find(function(pr){ return pr.id===it.id; });
+      totalProfit += ((it.price||0) - (p?p.cost:0)) * (it.qty||1);
+    });
+  });
+  totalProfit += repRev * 0.6; // estimate repair profit
+  
+  var margin = allRev > 0 ? (totalProfit/allRev*100) : 0;
+  var avgSale = invoices.length ? totalRev/invoices.length : 0;
+  
+  var s = function(id, v) { var e=document.getElementById(id); if(e) e.textContent=v; };
+  s('adv-total-rev', 'Rs. ' + Math.round(allRev).toLocaleString());
+  s('adv-total-profit', 'Rs. ' + Math.round(totalProfit).toLocaleString());
+  s('adv-margin', margin.toFixed(1) + '%');
+  s('adv-avg-sale', 'Rs. ' + Math.round(avgSale).toLocaleString());
+  
+  // Monthly chart
+  var monthly = {};
+  var now = new Date();
+  for (var m=0; m<12; m++) monthly[m] = 0;
+  invoices.forEach(function(inv) {
+    var d = parseAdminDate(inv.date); if (!d) return;
+    if (d.getFullYear() === now.getFullYear()) monthly[d.getMonth()] += inv.total||0;
+  });
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var ctx = document.getElementById('adv-revenue-chart');
+  if (ctx) {
+    if (advChartInstance) advChartInstance.destroy();
+    var ChartJS = window.Chart;
+    if (ChartJS) {
+      advChartInstance = new ChartJS(ctx, {
+        type: 'bar',
+        data: { labels: months, datasets: [{ label: 'Revenue (Rs.)', data: months.map(function(_,i){ return monthly[i]; }), backgroundColor: 'rgba(108,99,255,0.7)', borderRadius: 5 }] },
+        options: { responsive: true, plugins: { legend: { labels: { color: '#e0e0ff', font:{size:11} } } }, scales: { x: { ticks:{color:'#7070a0'} }, y: { ticks:{color:'#7070a0'} } } }
+      });
+    }
+  }
+  
+  // Top products
+  var prodRev = {};
+  invoices.forEach(function(inv){ (inv.items||[]).forEach(function(it){ prodRev[it.name]=(prodRev[it.name]||0)+(it.price||0)*(it.qty||1); }); });
+  var top = Object.entries(prodRev).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6);
+  var topEl = document.getElementById('adv-top-products');
+  if (topEl) topEl.innerHTML = top.map(function(p,i){ return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">'+(i+1)+'. '+p[0]+'</span><strong>Rs. '+Math.round(p[1]).toLocaleString()+'</strong></div>'; }).join('') || '<div style="color:var(--muted)">No sales data</div>';
+  
+  // Payment split
+  var payMethods = {};
+  invoices.forEach(function(inv){ var m=inv.payment||'Cash'; payMethods[m]=(payMethods[m]||0)+(inv.total||0); });
+  var payEl = document.getElementById('adv-payment-split');
+  if (payEl) {
+    var pyTotal = Object.values(payMethods).reduce(function(a,v){ return a+v; },0);
+    payEl.innerHTML = Object.entries(payMethods).map(function(e){ return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>'+e[0]+'</span><span>Rs. '+Math.round(e[1]).toLocaleString()+' <span style="color:var(--muted);font-size:11px">('+Math.round(pyTotal>0?e[1]/pyTotal*100:0)+'%)</span></span></div>'; }).join('') || '<div style="color:var(--muted)">No data</div>';
+  }
+  
+  // Category
+  var catRev = {};
+  invoices.forEach(function(inv){ (inv.items||[]).forEach(function(it){ var p=products.find(function(pr){ return pr.id===it.id; }); var cat=(p?p.category:'Other'); catRev[cat]=(catRev[cat]||0)+(it.price||0)*(it.qty||1); }); });
+  var catEl = document.getElementById('adv-cat-perf');
+  if (catEl) catEl.innerHTML = Object.entries(catRev).sort(function(a,b){ return b[1]-a[1]; }).map(function(e){ return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>'+e[0]+'</span><strong>Rs. '+Math.round(e[1]).toLocaleString()+'</strong></div>'; }).join('') || '<div style="color:var(--muted)">No data</div>';
+  
+  // Alerts
+  var alerts = [];
+  var lowStock = products.filter(function(p){ return p.stock <= (p.minStock||2); });
+  if (lowStock.length) alerts.push({ type:'warn', msg: lowStock.length+' products below minimum stock: '+lowStock.slice(0,3).map(function(p){ return p.name; }).join(', ')+(lowStock.length>3?'...':'') });
+  var overdue = (db.repairs||[]).filter(function(r){ return r.status!=='Delivered' && r.dueDate && new Date(r.dueDate)<new Date(); });
+  if (overdue.length) alerts.push({ type:'danger', msg: overdue.length+' overdue repairs!' });
+  var pendingCredits = (db.credits||[]).filter(function(c){ return c.status==='Active'; });
+  if (pendingCredits.length) alerts.push({ type:'info', msg: pendingCredits.length+' active credit sales with outstanding balance' });
+  var alertEl = document.getElementById('adv-alerts');
+  if (alertEl) alertEl.innerHTML = alerts.length ? alerts.map(function(a){ var colors={warn:'var(--warning)',danger:'var(--danger)',info:'var(--info)'}; return '<div style="padding:10px 14px;margin-bottom:8px;background:var(--card2);border-left:3px solid '+colors[a.type]+';border-radius:8px;font-size:13px">'+a.msg+'</div>'; }).join('') : '<div style="color:var(--success);font-size:13px;padding:10px">✅ No critical alerts</div>';
+}
+
+function parseAdminDate(str) {
+  if (!str) return null;
+  var iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/); if (iso) return new Date(str);
+  var sl = str.match(/^(\d{2})\/(\d{2})\/(\d{4})/); if (sl) return new Date(sl[3]+'-'+sl[2]+'-'+sl[1]);
+  var d = new Date(str); return isNaN(d) ? null : d;
+}
+
+// ── STAFF MANAGER ──
+function loadAdminStaff() {
+  var db = getDB(); if (!db) return;
+  if (!db.staff) db.staff = [];
+  var tbody = document.getElementById('admin-staff-tbl');
+  if (!tbody) return;
+  tbody.innerHTML = db.staff.length ? db.staff.map(function(s) {
+    return '<tr><td><strong>'+s.name+'</strong></td><td>'+s.role+'</td><td>'+(s.phone||'—')+'</td>'+
+      '<td>'+(s.commRate||0)+'% on '+(s.commBase||'revenue')+'</td>'+
+      '<td><span style="color:'+(s.status==='Active'?'var(--success)':'var(--muted)')+'">'+s.status+'</span></td>'+
+      '<td><button class="btn bsm" style="background:rgba(108,99,255,0.15);color:var(--pri)" onclick="editAdminStaff('+s.id+')">Edit</button> '+
+      '<button class="btn bsm" style="background:rgba(255,23,68,0.1);color:var(--danger);border:1px solid rgba(255,23,68,0.2)" onclick="deleteAdminStaff('+s.id+')">Del</button></td></tr>';
+  }).join('') : '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No staff added yet</td></tr>';
+}
+
+function openAdminStaffModal(id) {
+  var db = getDB(); if (!db) return;
+  var s = id ? (db.staff||[]).find(function(x){ return x.id===id; }) : null;
+  document.getElementById('asf-id').value = s ? s.id : '';
+  document.getElementById('asf-name').value = s ? s.name : '';
+  document.getElementById('asf-role').value = s ? s.role : 'Cashier';
+  document.getElementById('asf-phone').value = s ? (s.phone||'') : '';
+  document.getElementById('asf-comm').value = s ? (s.commRate||0) : 0;
+  document.getElementById('asf-comm-base').value = s ? (s.commBase||'revenue') : 'revenue';
+  document.getElementById('asf-status').value = s ? (s.status||'Active') : 'Active';
+  document.getElementById('admin-staff-form').style.display = 'block';
+}
+
+function editAdminStaff(id) { openAdminStaffModal(id); }
+
+function saveAdminStaff() {
+  var db = getDB(); if (!db) return;
+  var name = document.getElementById('asf-name').value.trim();
+  if (!name) { toast('Name required!', 'var(--danger)'); return; }
+  if (!db.staff) db.staff = [];
+  var id = parseInt(document.getElementById('asf-id').value) || Date.now();
+  var obj = { id:id, name:name, role:document.getElementById('asf-role').value, phone:document.getElementById('asf-phone').value, commRate:parseFloat(document.getElementById('asf-comm').value)||0, commBase:document.getElementById('asf-comm-base').value, status:document.getElementById('asf-status').value };
+  var idx = db.staff.findIndex(function(s){ return s.id===id; });
+  if (idx>=0) db.staff[idx]=obj; else db.staff.push(obj);
+  saveDB(db); loadAdminStaff();
+  document.getElementById('admin-staff-form').style.display = 'none';
+  toast('Staff saved!');
+}
+
+function deleteAdminStaff(id) {
+  if (!confirm('Delete this staff member?')) return;
+  var db = getDB(); if (!db) return;
+  db.staff = (db.staff||[]).filter(function(s){ return s.id!==id; });
+  saveDB(db); loadAdminStaff(); toast('Deleted!', 'var(--danger)');
+}
+
+// ── TAX SETTINGS ──
+function loadTaxPanel() {
+  var db = getDB(); if (!db) return;
+  var s = db.settings || {};
+  var setVal2 = function(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; };
+  setVal2('tax-rate', s.taxRate||0);
+  setVal2('tax-label', s.taxLabel||'Tax');
+  setVal2('tax-mode', s.taxMode||'none');
+  updateTaxPreview();
+  // Tax collection summary
+  var invoices = db.invoices || [];
+  var totalTax = invoices.reduce(function(a,inv){ return a+(inv.tax||0); }, 0);
+  var el = document.getElementById('tax-summary');
+  if (el) el.innerHTML = '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">Total Tax Collected</span><strong style="color:var(--success)">Rs. '+Math.round(totalTax).toLocaleString()+'</strong></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--muted)">Tax Invoices Count</span><strong>'+invoices.filter(function(inv){ return inv.tax>0; }).length+'</strong></div>';
+}
+
+function updateTaxPreview() {
+  var rate = parseFloat(document.getElementById('tax-rate') ? document.getElementById('tax-rate').value : 0)||0;
+  var label = document.getElementById('tax-label') ? document.getElementById('tax-label').value : 'Tax';
+  var mode = document.getElementById('tax-mode') ? document.getElementById('tax-mode').value : 'none';
+  var el = document.getElementById('tax-preview');
+  if (!el) return;
+  if (mode==='none') { el.innerHTML = 'No tax applied to sales'; return; }
+  var samplePrice = 1000;
+  if (mode==='inclusive') {
+    var taxAmt = samplePrice - (samplePrice/(1+rate/100));
+    el.innerHTML = 'Sample price Rs. 1000 → '+label+': Rs. '+taxAmt.toFixed(2)+' included';
+  } else {
+    var tax = samplePrice * rate/100;
+    el.innerHTML = 'Sample price Rs. 1000 + '+label+' '+rate+'% = Rs. '+(samplePrice+tax).toFixed(2)+' total';
+  }
+}
+
+function saveTaxSettings() {
+  var db = getDB(); if (!db) { toast('No POS data!','var(--danger)'); return; }
+  if (!db.settings) db.settings = {};
+  db.settings.taxRate = parseFloat(document.getElementById('tax-rate').value)||0;
+  db.settings.taxLabel = document.getElementById('tax-label').value||'Tax';
+  db.settings.taxMode = document.getElementById('tax-mode').value;
+  saveDB(db); toast('Tax settings saved!');
+}
+
+// ── COMMISSION ──
+function loadCommissionPanel() {
+  var db = getDB(); if (!db) return;
+  var s = db.settings || {};
+  var setChk2 = function(id,v){ var e=document.getElementById(id); if(e) e.checked=!!v; };
+  var setVal2 = function(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; };
+  setChk2('comm-enabled', s.commEnabled);
+  setVal2('comm-freq', s.commFreq||'monthly');
+  setVal2('comm-min-sales', s.commMinSales||0);
+  setVal2('comm-payout-day', s.commPayoutDay||'1');
+  
+  // Report
+  var now = new Date();
+  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  var invoices = (db.invoices||[]).filter(function(inv){ var d=parseAdminDate(inv.date); return d && d>=monthStart; });
+  var staff = db.staff || [];
+  var reportEl = document.getElementById('comm-report');
+  if (reportEl) {
+    var rows = staff.filter(function(s){ return s.status!=='Inactive'; }).map(function(s) {
+      var staffInvs = invoices.filter(function(inv){ return inv.staffId===s.id; });
+      var rev = staffInvs.reduce(function(a,inv){ return a+(inv.total||0); },0);
+      var comm = rev * (s.commRate||0) / 100;
+      return '<tr><td>'+s.name+'</td><td>'+s.role+'</td><td>'+staffInvs.length+'</td><td>Rs. '+rev.toLocaleString()+'</td><td style="color:var(--success);font-weight:700">Rs. '+Math.round(comm).toLocaleString()+'</td></tr>';
+    });
+    reportEl.innerHTML = staff.length ? '<table><thead><tr><th>Staff</th><th>Role</th><th>Sales</th><th>Revenue</th><th>Commission</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>' : '<div style="color:var(--muted);padding:10px">No staff added yet. Add staff in Staff Manager.</div>';
+  }
+}
+
+function saveCommissionSettings() {
+  var db = getDB(); if (!db) { toast('No POS data!','var(--danger)'); return; }
+  if (!db.settings) db.settings = {};
+  db.settings.commEnabled = document.getElementById('comm-enabled') ? document.getElementById('comm-enabled').checked : false;
+  db.settings.commFreq = document.getElementById('comm-freq') ? document.getElementById('comm-freq').value : 'monthly';
+  db.settings.commMinSales = parseFloat(document.getElementById('comm-min-sales') ? document.getElementById('comm-min-sales').value : 0)||0;
+  db.settings.commPayoutDay = document.getElementById('comm-payout-day') ? document.getElementById('comm-payout-day').value : '1';
+  saveDB(db); toast('Commission settings saved!');
+}
+
+// ── NOTIFICATIONS ──
+function loadNotificationsPanel() {
+  var db = getDB(); if (!db) return;
+  var s = db.settings || {};
+  var setChk2 = function(id,v){ var e=document.getElementById(id); if(e) e.checked=(v===undefined?true:!!v); };
+  setChk2('notif-lowstock', s.notifLowstock);
+  setChk2('notif-birthday', s.notifBirthday);
+  setChk2('notif-repair', s.notifRepair);
+  setChk2('notif-credit', s.notifCredit);
+  setChk2('notif-orders', s.notifOrders);
+  setChk2('notif-daily', s.notifDaily);
+  var setVal2 = function(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; };
+  setVal2('notif-lowstock-threshold', s.notifLowstockThreshold||'');
+  setVal2('notif-wa-number', s.notifWaNumber||'');
+  
+  // Alerts list
+  var alerts = [];
+  var lowStock = (db.products||[]).filter(function(p){ return p.stock <= (p.minStock||2); });
+  if (lowStock.length) alerts.push('📦 '+lowStock.length+' low stock items: '+lowStock.slice(0,3).map(function(p){ return p.name; }).join(', '));
+  var overdue = (db.repairs||[]).filter(function(r){ return r.status!=='Delivered' && r.dueDate && new Date(r.dueDate)<new Date(); });
+  if (overdue.length) alerts.push('🔧 '+overdue.length+' overdue repairs');
+  var overdueCredits = (db.credits||[]).filter(function(c){ return c.status==='Active' && c.nextDue && new Date(c.nextDue)<new Date(); });
+  if (overdueCredits.length) alerts.push('💳 '+overdueCredits.length+' credit payments overdue');
+  var alertsEl = document.getElementById('admin-alerts-list');
+  if (alertsEl) alertsEl.innerHTML = alerts.length ? alerts.map(function(a){ return '<div style="padding:10px;margin-bottom:6px;background:rgba(255,171,0,0.08);border-left:3px solid var(--warning);border-radius:8px;font-size:13px">'+a+'</div>'; }).join('') : '<div style="color:var(--success);font-size:13px;padding:10px">✅ No active alerts</div>';
+}
+
+function saveNotificationSettings() {
+  var db = getDB(); if (!db) { toast('No POS data!','var(--danger)'); return; }
+  if (!db.settings) db.settings = {};
+  var getChk = function(id){ var e=document.getElementById(id); return e?e.checked:false; };
+  var getVal = function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  db.settings.notifLowstock = getChk('notif-lowstock');
+  db.settings.notifBirthday = getChk('notif-birthday');
+  db.settings.notifRepair = getChk('notif-repair');
+  db.settings.notifCredit = getChk('notif-credit');
+  db.settings.notifOrders = getChk('notif-orders');
+  db.settings.notifDaily = getChk('notif-daily');
+  db.settings.notifLowstockThreshold = parseFloat(getVal('notif-lowstock-threshold'))||null;
+  db.settings.notifWaNumber = getVal('notif-wa-number');
+  saveDB(db); toast('Notification settings saved!');
+}
+</script>
+</body>
+</html>
