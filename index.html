@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Parent Monitor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%231976D2' rx='4'/><text x='16' y='23' text-anchor='middle' fill='white' font-size='18' font-family='sans-serif' font-weight='bold'>C</text></svg>">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
@@ -127,6 +128,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <div class="status-item"><div class="label">Camera</div><div class="value" id="camera-mode">--</div></div>
     <div class="status-item"><div class="label">Last Seen</div><div class="value" id="last-seen">--</div></div>
   </div>
+  <div style="background:#fff3e0;border:1px solid #ff9800;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#e65100">
+    <strong>Samsung:</strong> Open Recents → tap app icon → <strong>"Keep open"</strong> to prevent swipe-kill
+  </div>
 
   <div class="tabs" id="tab-bar">
     <button class="tab active" data-tab="tab-camera">Camera</button>
@@ -151,6 +155,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       <button class="btn-secondary" onclick="sendCommand('stop_monitoring')">Stop Monitor</button>
       <button class="btn-secondary" onclick="sendCommand('switch_camera')">Switch Camera</button>
       <button class="btn-warning" onclick="sendCommand('lock_device')">Lock Device</button>
+      <button class="btn-secondary" onclick="sendCommand('wakeup')">Wake Up Device</button>
       <button class="btn-danger" onclick="sendCommand('wipe_device')" style="grid-column: span 2;">Wipe Device</button>
     </div>
   </div>
@@ -163,6 +168,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     <div class="btn-grid">
       <button class="btn-primary" onclick="startStream()">Start Live Stream</button>
       <button class="btn-secondary" onclick="stopStream()">Stop Live Stream</button>
+      <button class="btn-secondary" onclick="sendCommand('stream_switch_camera')">Switch Camera</button>
     </div>
     <div class="info-card">
       <h3>Stream Status</h3>
@@ -334,6 +340,15 @@ function sendCommand(cmd) {
   if (!sanitizedEmail) { toast('Not paired', true); return; }
   const ref = db.ref('commands').child(sanitizedEmail).push();
   ref.set(cmd).then(() => toast('Command sent: ' + cmd));
+
+  // Also send FCM wake-up to ensure child receives command even if app is killed
+  fetch('/api/send-fcm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ command: cmd, sanitized_email: sanitizedEmail })
+  }).catch(() => {
+    // FCM endpoint may not be available if using plain http.server — ignore
+  });
 }
 
 function setupListeners() {
@@ -536,11 +551,15 @@ function startStream() {
   streamPC.addTransceiver('video', { direction: 'recvonly' });
   streamPC.addTransceiver('audio', { direction: 'recvonly' });
 
+  let combinedStream = null;
   streamPC.ontrack = event => {
+    if (!combinedStream) {
+      combinedStream = new MediaStream();
+    }
+    combinedStream.addTrack(event.track);
     if (event.track.kind === 'video') {
       document.getElementById('stream-video-status').textContent = 'Receiving';
-      const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
-      video.srcObject = stream;
+      video.srcObject = combinedStream;
       video.classList.remove('hidden');
       ph.classList.add('hidden');
       video.play().catch(e => console.log('Video play error:', e));
@@ -620,6 +639,7 @@ function cleanupStream() {
   if (streamSdpRef) { streamSdpRef.off(); streamSdpRef = null; }
   if (streamCandidateRef) { streamCandidateRef.off(); streamCandidateRef = null; }
   streamCandidateParentRef = null;
+  combinedStream = null;
 
   const video = document.getElementById('stream-video');
   if (video.srcObject) {
