@@ -157,7 +157,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
   <div class="tab-panel" id="tab-stream">
     <div class="camera-card">
-      <video id="stream-video" class="hidden" autoplay playsinline style="width:100%;display:block;min-height:200px;background:#111;" onerror="this.classList.add('hidden')"></video>
+      <video id="stream-video" class="hidden" autoplay playsinline muted style="width:100%;display:block;min-height:200px;background:#111;" onerror="this.classList.add('hidden')"></video>
       <div class="camera-placeholder" id="stream-placeholder">Stream not started. Click Start Live Stream.</div>
     </div>
     <div class="btn-grid">
@@ -539,9 +539,11 @@ function startStream() {
   streamPC.ontrack = event => {
     if (event.track.kind === 'video') {
       document.getElementById('stream-video-status').textContent = 'Receiving';
-      video.srcObject = event.streams[0];
+      const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+      video.srcObject = stream;
       video.classList.remove('hidden');
       ph.classList.add('hidden');
+      video.play().catch(e => console.log('Video play error:', e));
     } else if (event.track.kind === 'audio') {
       document.getElementById('stream-audio-status').textContent = 'Receiving';
     }
